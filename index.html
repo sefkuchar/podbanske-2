@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Občianske združenie Podbanské | Dedičstvo hôr pre budúce generácie</title>
+    <meta name="description" content="Prestižne občianske združenie dedikované ochrane prírodného dedičstva Vysokých Tatier a rozvoju udržateľnej horskej komunity.">
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <!-- Sophisticated Navigation -->
+    <nav class="navbar" id="mainNav">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <div class="brand-symbol">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L22 12L20 14L12 6L4 14L2 12L12 2Z" fill="currentColor"/>
+                        <path d="M5 13V22H19V13" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </div>
+                <div class="brand-content">
+                    <h1 class="brand-title">OZ Podbanské</h1>
+                    <p class="brand-subtitle">Dedičstvo hôr</p>
+                </div>
+            </div>
+            <button class="nav-toggle" id="navToggle" aria-label="Zobraziť menu">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+            <ul class="nav-menu" id="navMenu">
+                <li><a href="#home" class="nav-link active">Domov</a></li>
+                <li><a href="#about" class="nav-link">O združení</a></li>
+                <li><a href="#activities" class="nav-link">Naša činnosť</a></li>
+                <li><a href="#impact" class="nav-link">Výsledky</a></li>
+                <li><a href="#team" class="nav-link">Tím</a></li>
+                <li><a href="#contact" class="nav-link">Kontakt</a></li>
+            </ul>
+        </div>
+        <script>
+        // Simple mobile nav toggle
+        document.addEventListener('DOMContentLoaded', function() {
+            var navToggle = document.getElementById('navToggle');
+            var navMenu = document.getElementById('navMenu');
+            navToggle.addEventListener('click', function() {
+                navMenu.classList.toggle('open');
+                navToggle.classList.toggle('open');
+            });
+        });
+        </script>
+    </nav>
+
+    <!-- Elegant Hero Section -->
+    <section id="home" class="hero">
+        <div class="hero-media">
+            <div class="hero-image"></div>
+            <div class="hero-overlay"></div>
+        </div>
+        <div class="hero-content">
+            <div class="container">
+                <div class="hero-text">
+                    <p class="hero-eyebrow">Občianske združenie Podbanské</p>
+                    <h1 class="hero-headline">
+                        <span class="hero-headline-main">Dedičstvo hôr</span>
+                        <span class="hero-headline-sub">pre budúce generácie</span>
+                    </h1>
+                    <p class="hero-description">
+                        Prestížne občianske združenie dedikované ochrane prírodného 
+                        dedičstva Vysokých Tatier a rozvoju udržateľnej horskej komunity.
+                    </p>
+                    <div class="hero-actions">
+                        <a href="#about" class="btn btn-primary">Objavte našu misiu</a>
+                        <a href="#activities" class="btn btn-outline">Naše projekty</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="hero-scroll-indicator">
+            <div class="scroll-line"></div>
+        </div>
+    </section>
+
+    <!-- Sophisticated About Section -->
+    <section id="about" class="section-about">
+        <div class="container">
+            <div class="about-layout">
+                <div class="about-content">
+                    <header class="section-header">
+                        <p class="section-eyebrow">O našom združení</p>
+                        <h2 class="section-title">Posvätenosť horám a komunite</h2>
+                    </header>
+                    <div class="about-narrative">
+                        <p class="lead-text">
+                            V srdci Vysokých Tatier, kde sa každý deň píše nový príbeh o 
+                            súde prvých ľúčov a majestátnych vrcholoch, pôsobíme ako strážcovia 
+                            tohto výnimočného prírodného dedičstva.
+                        </p>
+                        <p>
+                            Naše združenie reprezentuje skupina odborníkov, miestnych obyvateľov 
+                            a vizionárov, ktorí zdrieľajú spoločné presvedčenie o potrebe 
+                            zodpovednej starostlivosti o jeden z najkrajších priateľov Európy.
+                        </p>
+                        <p>
+                            Vytvárame udržateľný model horského rozvoja, 
+                            ktorý spája ochranu prírody s potrebami modernéj komunity.
+                        </p>
+                    </div>
+                </div>
+                <div class="about-visual">
+                    <div class="visual-frame">
+                        <img src="https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80" alt="Tatry" style="width:100%;height:auto;max-height:340px;object-fit:cover;border-radius:18px;box-shadow:0 4px 32px rgba(0,0,0,0.08);">
+                        <div class="visual-accent"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Premium Activities Section -->
+    <section id="activities" class="section-activities">
+        <div class="container">
+            <header class="section-header centered">
+                <p class="section-eyebrow">Naše aktivity</p>
+                <h2 class="section-title">Rozsiahla činnosť pre ochranu a rozvoj</h2>
+                <p class="section-description">
+                    Každý z našich projektov predstavuje precizné spojenie odbornosti, 
+                    miestnej znalosti a dlhodobéj vízie udržateľného rozvoja.
+                </p>
+            </header>
+            
+            <div class="activities-grid" id="activitiesGrid">
+                <!-- Activities will be rendered here (with images) -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Impact Metrics Section -->
+    <section id="impact" class="section-impact">
+        <div class="impact-background">
+            <div class="impact-overlay"></div>
+        </div>
+        <div class="container">
+            <header class="section-header centered light">
+                <p class="section-eyebrow light">Naše výsledky</p>
+                <h2 class="section-title light">Dopad na komunitu</h2>
+            </header>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value">15<span class="metric-unit">km</span></div>
+                    <div class="metric-label">Obnovených chodníkov</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">2,340</div>
+                    <div class="metric-label">Vysadených stromov</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">120</div>
+                    <div class="metric-label">Podporených obyvateľov</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value">47</div>
+                    <div class="metric-label">Uskutočnených projektû</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Events Section -->
+    <section id="events" class="section-events">
+        <div class="container">
+            <header class="section-header">
+                <p class="section-eyebrow">Nadchádzajúce podujatia</p>
+                <h2 class="section-title">Kultivované stretnutia komunity</h2>
+            </header>
+            
+            <div class="events-timeline" id="eventsTimeline">
+                <!-- Events will be rendered here -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Team Section -->
+    <section id="team" class="section-team">
+        <div class="container">
+            <header class="section-header centered">
+                <p class="section-eyebrow">Vodcovský tím</p>
+                <h2 class="section-title">Expertiza a zaväzok</h2>
+            </header>
+            
+            <div class="team-grid" id="teamGrid">
+                <!-- Team members will be rendered here (with images) -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="section-contact">
+        <div class="container">
+            <div class="contact-layout">
+                <div class="contact-content">
+                    <header class="section-header">
+                        <p class="section-eyebrow">Kontakt</p>
+                        <h2 class="section-title">Spojte sa s nami</h2>
+                        <p class="section-description">
+                            Radi s vami prediskutujeme možnosti spolupráce 
+                            a odpovieme na vaše otázky.
+                        </p>
+                    </header>
+                    
+                    <div class="contact-methods">
+                        <div class="contact-method">
+                            <div class="method-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z" stroke="currentColor" stroke-width="1.5"/>
+                                    <circle cx="12" cy="10" r="3" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </div>
+                            <div class="method-details">
+                                <h4>Adresa</h4>
+                                <p>Podbanské 123<br>059 55 Poprad-Matej</p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-method">
+                            <div class="method-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </div>
+                            <div class="method-details">
+                                <h4>Telefon</h4>
+                                <p>+421 902 123 456</p>
+                            </div>
+                        </div>
+                        
+                        <div class="contact-method">
+                            <div class="method-icon">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                                    <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z" stroke="currentColor" stroke-width="1.5"/>
+                                    <polyline points="22,6 12,13 2,6" stroke="currentColor" stroke-width="1.5"/>
+                                </svg>
+                            </div>
+                            <div class="method-details">
+                                <h4>Email</h4>
+                                <p>info@ozpodbanske.sk</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="contact-form-container">
+                    <form class="contact-form" id="contactForm">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="firstName" class="form-label">Meno</label>
+                                <input type="text" id="firstName" name="firstName" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="lastName" class="form-label">Priezvisko</label>
+                                <input type="text" id="lastName" name="lastName" class="form-control" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="email" class="form-label">E-mailová adresa</label>
+                            <input type="email" id="email" name="email" class="form-control" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="subject" class="form-label">Predmet</label>
+                            <select id="subject" name="subject" class="form-control" required>
+                                <option value="">Vyberte predmet...</option>
+                                <option value="cooperation">Spolpráca</option>
+                                <option value="volunteering">Dobrovolníctvo</option>
+                                <option value="other">Iné</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="message" class="form-label">Správa</label>
+                            <textarea id="message" name="message" rows="5" class="form-control" required></textarea>
+                        </div>
+                        
+                        <button type="submit" class="btn btn-primary btn-block">
+                            Odoslať správu
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="container">
+            <div class="footer-content">
+                <div class="footer-brand">
+                    <div class="brand-symbol">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+                            <path d="M12 2L22 12L20 14L12 6L4 14L2 12L12 2Z" fill="currentColor"/>
+                        </svg>
+                    </div>
+                    <p>Občianske združenie Podbanské</p>
+                </div>
+                <div class="footer-links">
+                    <a href="#about">O združení</a>
+                    <a href="#activities">Aktivity</a>
+                    <a href="#contact">Kontakt</a>
+                    <a href="admin.html">Administrácia</a>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2024 Občianske združenie Podbanské. Všetky práva vyhradené.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="app.js"></script>
+</body>
+</html>

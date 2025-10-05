@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Administrácia - Občianske združenie Podbanské</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        .admin-page {
+            min-height: 100vh;
+            background: var(--neutral-cream);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .admin-login-container {
+            background: var(--neutral-off-white);
+            padding: var(--space-16);
+            border-radius: var(--radius-2xl);
+            box-shadow: var(--shadow-2xl);
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+        }
+        
+        .admin-brand {
+            margin-bottom: var(--space-10);
+        }
+        
+        .admin-brand .brand-symbol {
+            color: var(--accent-gold);
+            margin-bottom: var(--space-4);
+        }
+        
+        .admin-brand h1 {
+            font-family: var(--font-display);
+            font-size: 2rem;
+            color: var(--primary-brown);
+            margin-bottom: var(--space-2);
+        }
+        
+        .admin-subtitle {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .admin-form {
+            text-align: left;
+        }
+        
+        .admin-form .form-group {
+            margin-bottom: var(--space-6);
+        }
+        
+        .admin-error {
+            background: rgba(192, 21, 47, 0.1);
+            color: var(--primary-brown);
+            padding: var(--space-4);
+            border-radius: var(--radius-lg);
+            margin-top: var(--space-4);
+            font-size: 0.875rem;
+            border-left: 3px solid #c0152f;
+        }
+        
+        .admin-dashboard {
+            min-height: 100vh;
+            background: var(--neutral-cream);
+            padding: var(--space-8);
+        }
+        
+        .admin-header {
+            background: var(--neutral-off-white);
+            padding: var(--space-6);
+            border-radius: var(--radius-xl);
+            margin-bottom: var(--space-8);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: var(--shadow-md);
+        }
+        
+        .admin-title {
+            font-family: var(--font-display);
+            font-size: 1.5rem;
+            color: var(--primary-brown);
+            margin: 0;
+        }
+        
+        .admin-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: var(--space-6);
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        .admin-card {
+            background: var(--neutral-off-white);
+            padding: var(--space-8);
+            border-radius: var(--radius-xl);
+            box-shadow: var(--shadow-md);
+            transition: var(--transition-base);
+        }
+        
+        .admin-card:hover {
+            transform: translateY(-4px);
+            box-shadow: var(--shadow-lg);
+        }
+        
+        .admin-card h3 {
+            font-family: var(--font-display);
+            color: var(--primary-brown);
+            margin-bottom: var(--space-3);
+        }
+        
+        .admin-card p {
+            color: var(--text-secondary);
+            margin-bottom: var(--space-6);
+        }
+    </style>
+</head>
+<body class="admin-page">
+    <!-- Elegant Admin Login -->
+    <div id="adminLoginScreen">
+        <div class="admin-login-container">
+            <div class="admin-brand">
+                <div class="brand-symbol">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
+                        <path d="M12 2L22 12L20 14L12 6L4 14L2 12L12 2Z" fill="currentColor"/>
+                        <path d="M5 13V22H19V13" stroke="currentColor" stroke-width="1.5" fill="none"/>
+                    </svg>
+                </div>
+                <h1>Administrácia</h1>
+                <p class="admin-subtitle">Občianske združenie Podbanské</p>
+            </div>
+            
+            <form id="adminLoginForm" class="admin-form">
+                <div class="form-group">
+                    <label for="adminUsername" class="form-label">Používateľské meno</label>
+                    <input type="text" id="adminUsername" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="adminPassword" class="form-label">Heslo</label>
+                    <input type="password" id="adminPassword" class="form-control" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary btn-block">
+                    Prihlásiť sa
+                </button>
+                
+                <div id="adminLoginError" class="admin-error hidden">
+                    Nesprávne prihlasovacie údaje.
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Sophisticated Admin Dashboard -->
+    <div id="adminDashboard" class="admin-dashboard hidden">
+        <header class="admin-header">
+            <h1 class="admin-title">Administrátorský panel</h1>
+            <button onclick="location.reload()" class="btn btn-outline">
+                Odhlásiť sa
+            </button>
+        </header>
+        
+        <div class="admin-grid">
+            <!-- Activities Management Card -->
+            <div class="admin-card" style="grid-column: span 2;">
+                <h3>Správa aktivít</h3>
+                <form id="addActivityForm">
+                    <div class="form-group">
+                        <label for="activityTitle">Názov aktivity</label>
+                        <input type="text" id="activityTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="activityDescription">Popis</label>
+                        <textarea id="activityDescription" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="activityCategory">Kategória</label>
+                        <input type="text" id="activityCategory" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="activityImpact">Výsledok</label>
+                        <input type="text" id="activityImpact" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="activityImage">Obrázok (URL)</label>
+                        <input type="url" id="activityImage" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Pridať aktivitu</button>
+                </form>
+                <div id="activityList" style="margin-top:2em;"></div>
+            </div>
+
+            <!-- Events Management Card -->
+            <div class="admin-card" style="grid-column: span 2;">
+                <h3>Správa podujatí</h3>
+                <form id="addEventForm">
+                    <div class="form-group">
+                        <label for="eventTitle">Názov podujatia</label>
+                        <input type="text" id="eventTitle" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventDate">Dátum</label>
+                        <input type="text" id="eventDate" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="eventPlace">Miesto</label>
+                        <input type="text" id="eventPlace" class="form-control">
+                    </div>
+                    <div class="form-group">
+                        <label for="eventDescription">Popis</label>
+                        <textarea id="eventDescription" class="form-control" rows="2" required></textarea>
+                    </div>
+                    <button type="submit" class="btn btn-primary">Pridať podujatie</button>
+                </form>
+                <div id="eventList" style="margin-top:2em;"></div>
+            </div>
+
+            <!-- Photo Gallery Card -->
+            <div class="admin-card" style="grid-column: span 2;">
+                <h3>Fotogaléria</h3>
+                <form id="addPhotoForm">
+                    <div class="form-group">
+                        <label for="photoUrl">Obrázok (URL)</label>
+                        <input type="url" id="photoUrl" class="form-control" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="photoCaption">Popis</label>
+                        <input type="text" id="photoCaption" class="form-control">
+                    </div>
+                    <button type="submit" class="btn btn-primary">Pridať fotografiu</button>
+                </form>
+                <div id="photoList" style="margin-top:2em;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
