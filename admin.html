@@ -1,248 +1,740 @@
 <!DOCTYPE html>
 <html lang="sk">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Administrácia - Občianske združenie Podbanské</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
-    <style>
-        .admin-page {
-            min-height: 100vh;
-            background: var(--neutral-cream);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        
-        .admin-login-container {
-            background: var(--neutral-off-white);
-            padding: var(--space-16);
-            border-radius: var(--radius-2xl);
-            box-shadow: var(--shadow-2xl);
-            width: 100%;
-            max-width: 420px;
-            text-align: center;
-        }
-        
-        .admin-brand {
-            margin-bottom: var(--space-10);
-        }
-        
-        .admin-brand .brand-symbol {
-            color: var(--accent-gold);
-            margin-bottom: var(--space-4);
-        }
-        
-        .admin-brand h1 {
-            font-family: var(--font-display);
-            font-size: 2rem;
-            color: var(--primary-brown);
-            margin-bottom: var(--space-2);
-        }
-        
-        .admin-subtitle {
-            color: var(--text-secondary);
-            font-size: 0.95rem;
-        }
-        
-        .admin-form {
-            text-align: left;
-        }
-        
-        .admin-form .form-group {
-            margin-bottom: var(--space-6);
-        }
-        
-        .admin-error {
-            background: rgba(192, 21, 47, 0.1);
-            color: var(--primary-brown);
-            padding: var(--space-4);
-            border-radius: var(--radius-lg);
-            margin-top: var(--space-4);
-            font-size: 0.875rem;
-            border-left: 3px solid #c0152f;
-        }
-        
-        .admin-dashboard {
-            min-height: 100vh;
-            background: var(--neutral-cream);
-            padding: var(--space-8);
-        }
-        
-        .admin-header {
-            background: var(--neutral-off-white);
-            padding: var(--space-6);
-            border-radius: var(--radius-xl);
-            margin-bottom: var(--space-8);
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            box-shadow: var(--shadow-md);
-        }
-        
-        .admin-title {
-            font-family: var(--font-display);
-            font-size: 1.5rem;
-            color: var(--primary-brown);
-            margin: 0;
-        }
-        
-        .admin-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: var(--space-6);
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .admin-card {
-            background: var(--neutral-off-white);
-            padding: var(--space-8);
-            border-radius: var(--radius-xl);
-            box-shadow: var(--shadow-md);
-            transition: var(--transition-base);
-        }
-        
-        .admin-card:hover {
-            transform: translateY(-4px);
-            box-shadow: var(--shadow-lg);
-        }
-        
-        .admin-card h3 {
-            font-family: var(--font-display);
-            color: var(--primary-brown);
-            margin-bottom: var(--space-3);
-        }
-        
-        .admin-card p {
-            color: var(--text-secondary);
-            margin-bottom: var(--space-6);
-        }
-    </style>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin Panel - Občianske združenie Podbanské</title>
+<style>
+:root {
+  --primary-brown: #3A2F2A;
+  --accent-gold: #B8860B;
+  --neutral-cream: #F8F6F0;
+  --neutral-off-white: #FDFDFC;
+  --text-primary: #1A1A1A;
+  --text-secondary: #6B6B6B;
+  --radius-lg: 0.5rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --font-body: 'Inter', sans-serif;
+  --font-display: 'Playfair Display', serif;
+}
+body {
+  font-family: var(--font-body);
+  background: var(--neutral-cream);
+  margin: 0;
+  padding: var(--space-6);
+  color: var(--text-primary);
+}
+.hidden { display: none !important; }
+h1, h2 {
+  font-family: var(--font-display);
+  color: var(--primary-brown);
+}
+h1 { font-size: 2rem; margin-bottom: var(--space-4); }
+h2 { margin-top: 0; margin-bottom: var(--space-4); }
+.admin-page {
+  max-width: 1100px;
+  margin: 0 auto;
+}
+.admin-section {
+  background: var(--neutral-off-white);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+  margin-bottom: var(--space-6);
+}
+form > * {
+  display: block;
+  margin-bottom: var(--space-4);
+}
+input[type=text], input[type=password], input[type=email], input[type=file], textarea, select {
+  width: 100%;
+  padding: 0.5em;
+  border: 2px solid rgba(58,47,42,0.1);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-body);
+  font-size: 1em;
+  box-sizing: border-box;
+}
+textarea {
+  min-height: 80px;
+  resize: vertical;
+}
+button {
+  padding: 0.6em 1.2em;
+  border: none;
+  border-radius: var(--radius-lg);
+  background-color: var(--accent-gold);
+  color: #fff;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.3s;
+}
+button:hover {
+  background-color: #9a7209;
+}
+button.btn-danger {
+  background-color: #B33232;
+}
+button.btn-danger:hover {
+  background-color: #8a2626;
+}
+.flex-row {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+.flex-row > * {
+  margin: 0;
+}
+.status-message {
+  position: fixed;
+  top: 10px;
+  right: 10px;
+  background: var(--accent-gold);
+  color: white;
+  padding: 12px 18px;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  z-index: 10001;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  pointer-events: none;
+}
+.status-message.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.item-list {
+  max-height: 250px;
+  overflow-y: auto;
+  margin-top: 1em;
+  border: 1px solid #ccc;
+  border-radius: var(--radius-lg);
+  padding: 0.5em;
+  background: #fafafa;
+}
+
+/* Scrollbar for item list */
+.item-list::-webkit-scrollbar {
+  width: 8px;
+}
+.item-list::-webkit-scrollbar-thumb {
+  background-color: #B8860B;
+  border-radius: 4px;
+}
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 6px 8px;
+  margin-bottom: 6px;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
+}
+
+.item-row button {
+  min-width: 60px;
+  font-size: 0.9em;
+  font-weight: 600;
+  padding: 0.35em 0.7em;
+}
+label {
+  font-weight: 600;
+}
+</style>
 </head>
-<body class="admin-page">
-    <!-- Elegant Admin Login -->
-    <div id="adminLoginScreen">
-        <div class="admin-login-container">
-            <div class="admin-brand">
-                <div class="brand-symbol">
-                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none">
-                        <path d="M12 2L22 12L20 14L12 6L4 14L2 12L12 2Z" fill="currentColor"/>
-                        <path d="M5 13V22H19V13" stroke="currentColor" stroke-width="1.5" fill="none"/>
-                    </svg>
-                </div>
-                <h1>Administrácia</h1>
-                <p class="admin-subtitle">Občianske združenie Podbanské</p>
-            </div>
-            
-            <form id="adminLoginForm" class="admin-form">
-                <div class="form-group">
-                    <label for="adminUsername" class="form-label">Používateľské meno</label>
-                    <input type="text" id="adminUsername" class="form-control" required>
-                </div>
-                
-                <div class="form-group">
-                    <label for="adminPassword" class="form-label">Heslo</label>
-                    <input type="password" id="adminPassword" class="form-control" required>
-                </div>
-                
-                <button type="submit" class="btn btn-primary btn-block">
-                    Prihlásiť sa
-                </button>
-                
-                <div id="adminLoginError" class="admin-error hidden">
-                    Nesprávne prihlasovacie údaje.
-                </div>
-            </form>
-        </div>
+<body>
+
+<div class="admin-page">
+
+  <!-- Status Notification -->
+  <div id="statusMessage" class="status-message"></div>
+
+  <!-- LOGIN SCREEN -->
+  <section id="adminLoginScreen">
+    <h1>Prihlásenie do administrácie</h1>
+    <form id="adminLoginForm">
+      <label for="adminUsername">Používateľské meno</label>
+      <input type="text" id="adminUsername" required autocomplete="username" />
+      <label for="adminPassword">Heslo</label>
+      <input type="password" id="adminPassword" required autocomplete="current-password" />
+      <button type="submit">Prihlásiť sa</button>
+    </form>
+    <div id="adminLoginError" style="color:red; display:none; margin-top:1em;"></div>
+  </section>
+
+  <!-- DASHBOARD -->
+  <section id="adminDashboard" class="hidden">
+    <h1>Administrátorský panel</h1>
+    <button id="logoutBtn" style="margin-bottom:15px;">Odhlásiť sa</button>
+
+    <!-- Navigation Management -->
+    <div class="admin-section">
+      <h2>Správa navigácie</h2>
+      <form id="navEditForm">
+        <label for="navItemLabel">Názov odkazu</label>
+        <input type="text" id="navItemLabel" placeholder="Napr. Domov" required />
+        <label for="navItemHref">Href (napr. #home)</label>
+        <input type="text" id="navItemHref" placeholder="Napr. #home" required />
+        <button type="submit">Pridať / Uložiť odkaz</button>
+      </form>
+      <div id="navList" class="item-list"></div>
     </div>
 
-    <!-- Sophisticated Admin Dashboard -->
-    <div id="adminDashboard" class="admin-dashboard hidden">
-        <header class="admin-header">
-            <h1 class="admin-title">Administrátorský panel</h1>
-            <button onclick="location.reload()" class="btn btn-outline">
-                Odhlásiť sa
-            </button>
-        </header>
-        
-        <div class="admin-grid">
-            <!-- Activities Management Card -->
-            <div class="admin-card" style="grid-column: span 2;">
-                <h3>Správa aktivít</h3>
-                <form id="addActivityForm">
-                    <div class="form-group">
-                        <label for="activityTitle">Názov aktivity</label>
-                        <input type="text" id="activityTitle" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="activityDescription">Popis</label>
-                        <textarea id="activityDescription" class="form-control" rows="2" required></textarea>
-                    </div>
-                    <div class="form-group">
-                        <label for="activityCategory">Kategória</label>
-                        <input type="text" id="activityCategory" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="activityImpact">Výsledok</label>
-                        <input type="text" id="activityImpact" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="activityImage">Obrázok (URL)</label>
-                        <input type="url" id="activityImage" class="form-control">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Pridať aktivitu</button>
-                </form>
-                <div id="activityList" style="margin-top:2em;"></div>
-            </div>
-
-            <!-- Events Management Card -->
-            <div class="admin-card" style="grid-column: span 2;">
-                <h3>Správa podujatí</h3>
-                <form id="addEventForm">
-                    <div class="form-group">
-                        <label for="eventTitle">Názov podujatia</label>
-                        <input type="text" id="eventTitle" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="eventDate">Dátum</label>
-                        <input type="text" id="eventDate" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="eventPlace">Miesto</label>
-                        <input type="text" id="eventPlace" class="form-control">
-                    </div>
-                    <div class="form-group">
-                        <label for="eventDescription">Popis</label>
-                        <textarea id="eventDescription" class="form-control" rows="2" required></textarea>
-                    </div>
-                    <button type="submit" class="btn btn-primary">Pridať podujatie</button>
-                </form>
-                <div id="eventList" style="margin-top:2em;"></div>
-            </div>
-
-            <!-- Photo Gallery Card -->
-            <div class="admin-card" style="grid-column: span 2;">
-                <h3>Fotogaléria</h3>
-                <form id="addPhotoForm">
-                    <div class="form-group">
-                        <label for="photoUrl">Obrázok (URL)</label>
-                        <input type="url" id="photoUrl" class="form-control" required>
-                    </div>
-                    <div class="form-group">
-                        <label for="photoCaption">Popis</label>
-                        <input type="text" id="photoCaption" class="form-control">
-                    </div>
-                    <button type="submit" class="btn btn-primary">Pridať fotografiu</button>
-                </form>
-                <div id="photoList" style="margin-top:2em;"></div>
-            </div>
-        </div>
+    <!-- Hero Section Management -->
+    <div class="admin-section">
+      <h2>Správa hlavnej sekcie (Hero)</h2>
+      <form id="heroEditForm">
+        <label for="heroEyebrow">Text obslužnej linky</label>
+        <input type="text" id="heroEyebrow" placeholder="Malý text nad hlavným nadpisom" />
+        <label for="heroMainHeadline">Hlavný nadpis</label>
+        <input type="text" id="heroMainHeadline" placeholder="Hlavný veľký nadpis" />
+        <label for="heroSubHeadline">Podnadpis</label>
+        <input type="text" id="heroSubHeadline" placeholder="Krátky podnadpis" />
+        <label for="heroDescription">Popis</label>
+        <textarea id="heroDescription" placeholder="Detailnejší popis"></textarea>
+        <label for="heroBackgroundImage">Nahrať obrázok pozadia</label>
+        <input type="file" id="heroBackgroundImage" accept="image/*" />
+        <button type="submit">Uložiť zmeny</button>
+      </form>
     </div>
 
-    <script src="app.js"></script>
+    <!-- About Section Management -->
+    <div class="admin-section">
+      <h2>Správa sekcie O nás</h2>
+      <form id="aboutEditForm">
+        <label for="aboutLeadText">Úvodný text</label>
+        <textarea id="aboutLeadText" placeholder="Vzdelávací a informačný text"></textarea>
+        <label for="aboutParagraph1">Prvý odsek</label>
+        <textarea id="aboutParagraph1" placeholder="Podrobný prvý odsek"></textarea>
+        <label for="aboutParagraph2">Druhý odsek</label>
+        <textarea id="aboutParagraph2" placeholder="Podrobný druhý odsek"></textarea>
+        <label for="aboutImage">URL obrázku (voliteľné)</label>
+        <input type="text" id="aboutImage" placeholder="URL obrázku (napr. https://...)" />
+        <button type="submit">Uložiť zmeny</button>
+      </form>
+    </div>
+
+    <!-- Activities Management -->
+    <div class="admin-section">
+      <h2>Správa aktivít</h2>
+      <form id="addActivityForm">
+        <label for="activityTitle">Názov aktivity</label>
+        <input type="text" id="activityTitle" placeholder="Názov aktivity" required />
+        <label for="activityDescription">Popis</label>
+        <textarea id="activityDescription" placeholder="Popis aktivity" required></textarea>
+        <label for="activityCategory">Kategória</label>
+        <input type="text" id="activityCategory" placeholder="Environment, Community, atď." />
+        <label for="activityImpact">Výsledok</label>
+        <input type="text" id="activityImpact" placeholder="Dosiahnuté výsledky" />
+        <label for="activityImage">Nahrať obrázok</label>
+        <input type="file" id="activityImage" accept="image/*" />
+        <button type="submit">Pridať / Uložiť aktivitu</button>
+      </form>
+      <div id="activityList" class="item-list"></div>
+    </div>
+
+    <!-- Events Management -->
+    <div class="admin-section">
+      <h2>Správa podujatí</h2>
+      <form id="addEventForm">
+        <label for="eventTitle">Názov podujatia</label>
+        <input type="text" id="eventTitle" required />
+        <label for="eventDate">Dátum</label>
+        <input type="text" id="eventDate" placeholder="Napr. 15. december 2024" />
+        <label for="eventPlace">Miesto (voliteľné)</label>
+        <input type="text" id="eventPlace" />
+        <label for="eventDescription">Popis</label>
+        <textarea id="eventDescription"></textarea>
+        <button type="submit">Pridať / Uložiť podujatie</button>
+      </form>
+      <div id="eventList" class="item-list"></div>
+    </div>
+
+    <!-- Contact Info Management -->
+    <div class="admin-section">
+      <h2>Kontakt</h2>
+      <form id="contactEditForm">
+        <label for="contactAddress">Adresa</label>
+        <textarea id="contactAddress" placeholder="Adresa združenia"></textarea>
+        <label for="contactPhone">Telefón</label>
+        <input type="text" id="contactPhone" placeholder="+421 902 123 456" />
+        <label for="contactEmail">E-mail</label>
+        <input type="email" id="contactEmail" placeholder="info@ozpodbanske.sk" />
+        <button type="submit">Uložiť kontakt</button>
+      </form>
+    </div>
+
+    <!-- Footer Text Management -->
+    <div class="admin-section">
+      <h2>Pätka stránky</h2>
+      <form id="footerEditForm">
+        <label for="footerText">Text pätky</label>
+        <textarea id="footerText"></textarea>
+        <button type="submit">Uložiť</button>
+      </form>
+    </div>
+
+  </section>
+</div>
+
+<script>
+(() => {
+  const statusMessageEl = document.getElementById("statusMessage");
+
+  function notify(msg) {
+    statusMessageEl.textContent = msg;
+    statusMessageEl.classList.add("visible");
+    setTimeout(() => statusMessageEl.classList.remove("visible"), 3000);
+  }
+
+  // Login Logic
+  const adminLoginScreen = document.getElementById("adminLoginScreen");
+  const adminDashboard = document.getElementById("adminDashboard");
+  const loginForm = document.getElementById("adminLoginForm");
+  const loginError = document.getElementById("adminLoginError");
+  const logoutBtn = document.getElementById("logoutBtn");
+
+  function showDashboard() {
+    adminLoginScreen.classList.add("hidden");
+    adminDashboard.classList.remove("hidden");
+  }
+  function showLogin() {
+    adminLoginScreen.classList.remove("hidden");
+    adminDashboard.classList.add("hidden");
+  }
+  function checkLogin() {
+    return sessionStorage.getItem("loggedIn") === "true";
+  }
+
+  loginForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const username = document.getElementById("adminUsername").value.trim();
+    const password = document.getElementById("adminPassword").value.trim();
+    if (username === "admin" && password === "podban2024") {
+      sessionStorage.setItem("loggedIn", "true");
+      loginError.style.display = "none";
+      showDashboard();
+      loadAllDataToForms();
+      renderAdminLists();
+    } else {
+      loginError.textContent = "Nesprávne prihlasovacie údaje.";
+      loginError.style.display = "block";
+      setTimeout(() => loginError.style.display = "none", 3000);
+    }
+  });
+
+  logoutBtn.addEventListener("click", () => {
+    sessionStorage.removeItem("loggedIn");
+    showLogin();
+    clearForms();
+  });
+
+  if (checkLogin()) {
+    showDashboard();
+  }
+
+  // Data Keys
+  const KEYS = {
+    NAV: "siteNavigation",
+    HERO: "heroSection",
+    ABOUT: "aboutSection",
+    ACTIVITIES: "adminActivities",
+    EVENTS: "adminEvents",
+    CONTACT: "contactInfo",
+    FOOTER: "footerText",
+  };
+
+  // Load data or default
+  function getData(key, defaultValue) {
+    let d = localStorage.getItem(key);
+    if (!d) return defaultValue;
+    try {
+      return JSON.parse(d);
+    } catch {
+      return defaultValue;
+    }
+  }
+  // Save data to localStorage
+  function saveData(key, data) {
+    localStorage.setItem(key, JSON.stringify(data));
+  }
+
+  // ---- Navigation Management ----
+  const navEditForm = document.getElementById("navEditForm");
+  const navList = document.getElementById("navList");
+  let navData = getData(KEYS.NAV, [
+    { label: "Domov", href: "#home" },
+    { label: "O združení", href: "#about" },
+    { label: "Naša činnosť", href: "#activities" },
+    { label: "Výsledky", href: "#impact" },
+    { label: "Tím", href: "#team" },
+    { label: "Kontakt", href: "#contact" },
+  ]);
+  let navEditIndex = -1;
+
+  function renderNavItems() {
+    navList.innerHTML = navData.map((item, i) => `
+      <div class='item-row'>
+        <div><strong>${item.label}</strong> (${item.href})</div>
+        <div>
+          <button data-index="${i}" class="btn-edit-nav">Upraviť</button>
+          <button data-index="${i}" class="btn-delete-nav btn-danger">Vymazať</button>
+        </div>
+      </div>
+    `).join("");
+    navList.querySelectorAll(".btn-edit-nav").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.index);
+        navEditIndex = i;
+        const item = navData[i];
+        document.getElementById("navItemLabel").value = item.label;
+        document.getElementById("navItemHref").value = item.href;
+        notify("Upravujete navigačný odkaz");
+      });
+    });
+    navList.querySelectorAll(".btn-delete-nav").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const i = parseInt(btn.dataset.index);
+        if (confirm("Naozaj chcete vymazať tento odkaz?")) {
+          navData.splice(i, 1);
+          saveData(KEYS.NAV, navData);
+          renderNavItems();
+          notify("Odkaz bol vymazaný");
+        }
+      });
+    });
+  }
+  navEditForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const label = document.getElementById("navItemLabel").value.trim();
+    const href = document.getElementById("navItemHref").value.trim();
+    if (!label || !href) {
+      alert("Vyplňte název a href");
+      return;
+    }
+    if (navEditIndex >= 0) {
+      navData[navEditIndex] = { label, href };
+      navEditIndex = -1;
+      notify("Navigačný odkaz bol upravený");
+    } else {
+      navData.push({ label, href });
+      notify("Navigačný odkaz bol pridaný");
+    }
+    saveData(KEYS.NAV, navData);
+    navEditForm.reset();
+    renderNavItems();
+  });
+
+  // ---- Hero Section Management ----
+  const heroForm = document.getElementById("heroEditForm");
+  heroForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    try {
+      const eyebrow = document.getElementById("heroEyebrow").value.trim();
+      const mainHeadline = document.getElementById("heroMainHeadline").value.trim();
+      const subHeadline = document.getElementById("heroSubHeadline").value.trim();
+      const description = document.getElementById("heroDescription").value.trim();
+      let backgroundImage = "";
+
+      const fileInput = document.getElementById("heroBackgroundImage");
+      if (fileInput.files && fileInput.files[0]) {
+        backgroundImage = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onload = () => resolve(reader.result);
+          reader.onerror = () => reject("Nepodarilo načítať obrázok");
+          reader.readAsDataURL(fileInput.files[0]);
+        });
+      } else {
+        // Preserve old background if exists
+        const oldData = getData(KEYS.HERO, {});
+        backgroundImage = oldData.backgroundImage || "";
+      }
+      const heroData = { eyebrow, mainHeadline, subHeadline, description, backgroundImage };
+      saveData(KEYS.HERO, heroData);
+      notify("Zmeny hlavnej sekcie uložené");
+      heroForm.reset();
+      fillHeroForm(heroData);
+    } catch (err) {
+      alert(err);
+    }
+  });
+
+  function fillHeroForm(data) {
+    document.getElementById("heroEyebrow").value = data.eyebrow || "";
+    document.getElementById("heroMainHeadline").value = data.mainHeadline || "";
+    document.getElementById("heroSubHeadline").value = data.subHeadline || "";
+    document.getElementById("heroDescription").value = data.description || "";
+  }
+
+  // ---- About Section Management ----
+  const aboutForm = document.getElementById("aboutEditForm");
+  aboutForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const lead = document.getElementById("aboutLeadText").value.trim();
+    const para1 = document.getElementById("aboutParagraph1").value.trim();
+    const para2 = document.getElementById("aboutParagraph2").value.trim();
+    const image = document.getElementById("aboutImage").value.trim();
+    const aboutData = { lead, paragraph1: para1, paragraph2: para2, image };
+    saveData(KEYS.ABOUT, aboutData);
+    notify("Sekcia O nás bola uložená");
+  });
+
+  // ---- Activities Management ----
+  const addActivityForm = document.getElementById("addActivityForm");
+  const activityList = document.getElementById("activityList");
+  let activities = getData(KEYS.ACTIVITIES, []);
+  let editActivityIndex = -1;
+
+  function renderActivities() {
+    activities = getData(KEYS.ACTIVITIES, []);
+    if (!activities.length) {
+      activityList.innerHTML = "<em>Žiadne aktivity.</em>";
+      return;
+    }
+    activityList.innerHTML = activities.map((a,i) => `
+      <div class="item-row">
+        <div style="display:flex; align-items:center;gap:0.5rem;">
+          ${a.image ? `<img src="${a.image}" alt="" style="max-width:70px; max-height:50px; object-fit:cover; border-radius:6px;">` : ""}
+          <div>
+            <strong>${a.title}</strong><br/>
+            <small>${a.category || ""} • ${a.impact || ""}</small>
+            <p style="margin:0;">${a.description}</p>
+          </div>
+        </div>
+        <div>
+          <button data-index="${i}" class="edit-activity">Upraviť</button>
+          <button data-index="${i}" class="delete-activity btn-danger">Vymazať</button>
+        </div>
+      </div>    
+    `).join("");
+    attachActivityButtons();
+  }
+  function attachActivityButtons() {
+    activityList.querySelectorAll(".edit-activity").forEach(btn => {
+      btn.onclick = () => {
+        editActivityIndex = parseInt(btn.dataset.index);
+        const a = activities[editActivityIndex];
+        if (!a) return;
+        document.getElementById("activityTitle").value = a.title;
+        document.getElementById("activityDescription").value = a.description;
+        document.getElementById("activityCategory").value = a.category || "";
+        document.getElementById("activityImpact").value = a.impact || "";
+        notify("Upravujete aktivitu");
+      };
+    });
+    activityList.querySelectorAll(".delete-activity").forEach(btn => {
+      btn.onclick = () => {
+        const i = parseInt(btn.dataset.index);
+        if (confirm("Naozaj vymazať túto aktivitu?")) {
+          activities.splice(i,1);
+          saveData(KEYS.ACTIVITIES, activities);
+          renderActivities();
+          notify("Aktivita bola vymazaná");
+          if (editActivityIndex === i) clearActivityForm();
+        }
+      };
+    });
+  }
+  function clearActivityForm() {
+    editActivityIndex = -1;
+    addActivityForm.reset();
+  }
+
+  addActivityForm.addEventListener("submit", async e => {
+    e.preventDefault();
+    const title = e.target.activityTitle.value.trim();
+    const description = e.target.activityDescription.value.trim();
+    const category = e.target.activityCategory.value.trim();
+    const impact = e.target.activityImpact.value.trim();
+    const imgInput = e.target.activityImage;
+    let image = "";
+    if (imgInput.files && imgInput.files[0]) {
+      image = await new Promise((res, rej) => {
+        const reader = new FileReader();
+        reader.onload = () => res(reader.result);
+        reader.onerror = () => rej("Nepodarilo sa načítať obrázok");
+        reader.readAsDataURL(imgInput.files[0]);
+      });
+    } else if (editActivityIndex >= 0 && activities[editActivityIndex]) {
+      image = activities[editActivityIndex].image || "";
+    }
+    if (!title || !description) {
+      alert("Názov a popis sú povinné.");
+      return;
+    }
+    if (editActivityIndex >= 0) {
+      activities[editActivityIndex] = { title, description, category, impact, image };
+      notify("Aktivita bola upravená");
+    } else {
+      activities.unshift({ title, description, category, impact, image });
+      notify("Aktivita bola pridaná");
+    }
+    saveData(KEYS.ACTIVITIES, activities);
+    clearActivityForm();
+    renderActivities();
+  });
+
+  // ---- Events Management ----
+  const addEventForm = document.getElementById("addEventForm");
+  const eventList = document.getElementById("eventList");
+  let events = getData(KEYS.EVENTS, []);
+  let editEventIndex = -1;
+
+  function renderEvents() {
+    events = getData(KEYS.EVENTS, []);
+    if (!events.length) {
+      eventList.innerHTML = "<em>Žiadne podujatia.</em>";
+      return;
+    }
+    eventList.innerHTML = events.map((ev,i) => `
+      <div class="item-row">
+        <div>
+          <strong>${ev.title}</strong><br/>
+          <small>${ev.date || ""} ${ev.place ? `• ${ev.place}` : ""}</small>
+          <p style="margin:0;">${ev.description || ""}</p>
+        </div>
+        <div>
+          <button data-index="${i}" class="edit-event">Upraviť</button>
+          <button data-index="${i}" class="delete-event btn-danger">Vymazať</button>
+        </div>
+      </div>    
+    `).join("");
+    attachEventButtons();
+  }
+  function attachEventButtons() {
+    eventList.querySelectorAll(".edit-event").forEach(btn => {
+      btn.onclick = () => {
+        editEventIndex = parseInt(btn.dataset.index);
+        const ev = events[editEventIndex];
+        if (!ev) return;
+        document.getElementById("eventTitle").value = ev.title;
+        document.getElementById("eventDate").value = ev.date || "";
+        document.getElementById("eventPlace").value = ev.place || "";
+        document.getElementById("eventDescription").value = ev.description || "";
+        notify("Upravujete podujatie");
+      };
+    });
+    eventList.querySelectorAll(".delete-event").forEach(btn => {
+      btn.onclick = () => {
+        const i = parseInt(btn.dataset.index);
+        if (confirm("Naozaj vymazať toto podujatie?")) {
+          events.splice(i,1);
+          saveData(KEYS.EVENTS, events);
+          renderEvents();
+          notify("Podujatie bolo vymazané");
+          if (editEventIndex === i) clearEventForm();
+        }
+      };
+    });
+  }
+  function clearEventForm() {
+    editEventIndex = -1;
+    addEventForm.reset();
+  }
+  addEventForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const title = e.target.eventTitle.value.trim();
+    const date = e.target.eventDate.value.trim();
+    const place = e.target.eventPlace.value.trim();
+    const description = e.target.eventDescription.value.trim();
+    if (!title) {
+      alert("Názov podujatia je povinný.");
+      return;
+    }
+    if (editEventIndex >= 0) {
+      events[editEventIndex] = { title, date, place, description };
+      notify("Podujatie bolo upravené");
+    } else {
+      events.unshift({ title, date, place, description });
+      notify("Podujatie bolo pridané");
+    }
+    saveData(KEYS.EVENTS, events);
+    clearEventForm();
+    renderEvents();
+  });
+
+  // ---- Contact Info Management ----
+  const contactForm = document.getElementById("contactEditForm");
+  contactForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const address = document.getElementById("contactAddress").value.trim();
+    const phone = document.getElementById("contactPhone").value.trim();
+    const email = document.getElementById("contactEmail").value.trim();
+    if (!address) {
+      alert("Adresa je povinná.");
+      return;
+    }
+    saveData(KEYS.CONTACT, { address, phone, email });
+    notify("Kontakt bol uložený");
+  });
+
+  // ---- Footer Text Management ----
+  const footerForm = document.getElementById("footerEditForm");
+  footerForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const text = document.getElementById("footerText").value.trim();
+    saveData(KEYS.FOOTER, text);
+    notify("Text pätky bol uložený");
+  });
+
+  // Load data to forms on dashboard start
+  function loadAllDataToForms() {
+    // Navigation
+    navData = getData(KEYS.NAV, navData);
+    renderNavItems();
+
+    // Hero
+    fillHeroForm(getData(KEYS.HERO, {
+      eyebrow: "", mainHeadline: "", subHeadline: "", description: "", backgroundImage: ""
+    }));
+
+    // About
+    const about = getData(KEYS.ABOUT, { lead: "", paragraph1: "", paragraph2: "", image: "" });
+    document.getElementById("aboutLeadText").value = about.lead;
+    document.getElementById("aboutParagraph1").value = about.paragraph1;
+    document.getElementById("aboutParagraph2").value = about.paragraph2;
+    document.getElementById("aboutImage").value = about.image;
+
+    // Activities
+    activities = getData(KEYS.ACTIVITIES, []);
+    renderActivities();
+
+    // Events
+    events = getData(KEYS.EVENTS, []);
+    renderEvents();
+
+    // Contact
+    const contact = getData(KEYS.CONTACT, { address: "", phone: "", email: "" });
+    document.getElementById("contactAddress").value = contact.address;
+    document.getElementById("contactPhone").value = contact.phone;
+    document.getElementById("contactEmail").value = contact.email;
+
+    // Footer
+    const footerText = localStorage.getItem(KEYS.FOOTER) || "";
+    document.getElementById("footerText").value = footerText;
+  }
+
+  // Clear all forms upon logout
+  function clearForms() {
+    navEditForm.reset();
+    heroForm.reset();
+    aboutForm.reset();
+    addActivityForm.reset();
+    addEventForm.reset();
+    contactForm.reset();
+    footerForm.reset();
+  }
+
+  // Initial load if logged in
+  if (checkLogin()) {
+    showDashboard();
+    loadAllDataToForms();
+  }
+})();
+</script>
+
 </body>
 </html>
