@@ -1,0 +1,81 @@
+/* New Sections Styles */
+.section-history,
+.section-nature,
+.section-rules,
+.section-magic {
+    padding: var(--space-24) 0;
+    background: var(--neutral-off-white);
+}
+
+.section-nature {
+    background: var(--neutral-cream);
+}
+
+.section-magic {
+    background: linear-gradient(to right, var(--neutral-cream), var(--neutral-off-white));
+}
+
+.content-layout {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: var(--space-8);
+    margin-top: var(--space-8);
+}
+
+@media (min-width: 768px) {
+    .content-layout {
+        grid-template-columns: 3fr 2fr;
+        align-items: start;
+    }
+}
+
+.content-text h3 {
+    font-family: var(--font-display);
+    font-size: 1.75rem;
+    color: var(--primary-brown);
+    margin-bottom: var(--space-4);
+}
+
+.content-body {
+    font-size: 1.1rem;
+    line-height: 1.7;
+    color: var(--text-secondary);
+}
+
+.content-image img {
+    width: 100%;
+    height: auto;
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-lg);
+}
+
+/* Rules specific styles */
+.section-rules .content-layout {
+    grid-template-columns: 1fr;
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+.section-rules .content-body {
+    background: var(--neutral-cream);
+    padding: var(--space-6);
+    border-radius: var(--radius-lg);
+    box-shadow: var(--shadow-md);
+}
+
+/* Magic section specific */
+.section-magic .content-layout {
+    position: relative;
+}
+
+.section-magic .content-image::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: linear-gradient(45deg, rgba(184,134,11,0.2), rgba(58,47,42,0.1));
+    border-radius: var(--radius-lg);
+    pointer-events: none;
+}
