@@ -23,7 +23,7 @@ const FIREBASE_CONFIG = {
 // --------------------------
 
 // If you haven't filled the config, the script won't attempt to connect.
-const IS_CONFIG_FILLED = FIREBASE_CONFIG.apiKey !== "YOUR_API_KEY" && FIREBASE_CONFIG.projectId !== "YOUR_PROJECT_ID";
+const IS_CONFIG_FILLED = FIREBASE_CONFIG.apiKey !== "AIzaSyDhyFdDyZwz7ZGVCRhiwQiIFH-8wrr9IK" && FIREBASE_CONFIG.projectId !== "podbanske-c09cc";
 
 if (!IS_CONFIG_FILLED) {
   console.warn('firebase-init.js: Firebase config not filled. Fill FIREBASE_CONFIG in firebase-init.js to enable Firestore sync.');
@@ -187,3 +187,4 @@ if (!IS_CONFIG_FILLED) {
 }
 
 // End of firebase-init.js
+
