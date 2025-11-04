@@ -425,6 +425,8 @@ label {
   </section>
 </div>
 
+<!-- Firebase initialization & sync (Storage + Firestore) -->
+<script type="module" src="firebase-init.js"></script>
 <script>
 (() => {
   const statusMessageEl = document.getElementById("statusMessage");
@@ -516,13 +518,17 @@ label {
     try {
       if (window.firebaseStorage && typeof window.firebaseStorage.uploadImage === 'function') {
         const path = `images/${section}/${Date.now()}_${file.name}`;
+        // If Firebase is available, prefer uploading and returning a public URL
         return await window.firebaseStorage.uploadImage(file, path);
       }
     } catch (err) {
-      console.warn('Firebase upload failed or not available:', err);
+      console.warn('Firebase upload failed:', err);
+      // If Firebase exists but failed, do not fallback to data URL (may exceed Firestore limits)
+      notify('Nahrávanie obrázka do cloudu zlyhalo. Skúste neskôr.');
+      return null;
     }
 
-    // Fallback: convert file to data URL so previews and saving still work
+    // Fallback mode (when Firebase not present): convert file to data URL so local previews still work
     try {
       return await new Promise((resolve, reject) => {
         const reader = new FileReader();
