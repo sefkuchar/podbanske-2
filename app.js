@@ -1,9 +1,11 @@
+
 // ---------------------------------
 // Main website app rendering and synchronization
 // ---------------------------------
 class ElegantMountainApp {
     constructor() {
-      this.data = {
+      // Default example data - only used to initialize localStorage if empty
+      const defaultData = {
         activities: [
           {
             id: 1,
@@ -95,21 +97,43 @@ class ElegantMountainApp {
           },
         ],
       };
+      // Initialize default activities in localStorage if none exist
+      try {
+        const storedActivities = localStorage.getItem('adminActivities');
+        if (!storedActivities || JSON.parse(storedActivities).length === 0) {
+          localStorage.setItem('adminActivities', JSON.stringify(defaultData.activities));
+        }
+      } catch (err) {
+        console.error('Error initializing default activities:', err);
+      }
+      
       this.init();
     }
-  
+
     init() {
       this.setupNavigation();
       this.setupScrollEffects();
-      this.renderActivities();
-      this.renderEvents();
-      this.renderTeam();
+  this.renderActivities();
+  // history/nature/rules/magic are global functions (renderers), call them directly
+  renderHistory();
+  renderNature();
+  renderRules();
+  renderMagic();
       this.setupContactForm();
   
       this.loadAndApplyAllSections();
   
       this.initializeAnimations();
       this.setupLocalStorageListener();
+      // When the tab/window regains focus, re-load sections from localStorage.
+      // This helps when admin edits in the same browser (navigating between pages)
+      window.addEventListener('focus', () => {
+        try {
+          this.loadAndApplyAllSections();
+        } catch (err) {
+          console.error('Error reloading sections on focus', err);
+        }
+      });
     }
   
     setupNavigation() {
@@ -182,12 +206,14 @@ class ElegantMountainApp {
     renderActivities() {
       const activitiesGrid = document.getElementById("activitiesGrid");
       if (!activitiesGrid) return;
-      let adminActivities = [];
+      // Load all activities from localStorage
+      let activities = [];
       try {
-        adminActivities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
-      } catch {}
-      const allActivities = [...adminActivities, ...this.data.activities];
-      activitiesGrid.innerHTML = allActivities
+        activities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
+      } catch (err) {
+        console.error('Error loading activities:', err);
+      }
+      activitiesGrid.innerHTML = activities
         .map(
           (activity, idx) => `
         <article class="activity-card" tabindex="0" data-idx="${idx}" data-category="${
@@ -229,7 +255,7 @@ class ElegantMountainApp {
         btn.addEventListener("click", function (e) {
           e.preventDefault();
           const idx = btn.getAttribute("data-idx");
-          const activity = allActivities[idx];
+          const activity = activities[idx];
           modalBody.innerHTML = `
             ${
               activity.image
@@ -364,31 +390,50 @@ class ElegantMountainApp {
     setupLocalStorageListener() {
       window.addEventListener("storage", (event) => {
         if (!event.key) return;
-        switch (event.key) {
-          case "heroSection":
-            try {
-              const heroData = JSON.parse(event.newValue);
-              applyHeroSection(heroData);
-            } catch {}
-            break;
-          case "aboutSection":
-            try {
-              const aboutData = JSON.parse(event.newValue);
-              applyAboutSection(aboutData);
-            } catch {}
-            break;
-          case "adminActivities":
-            // Handle activities update live if needed
-            break;
-          case "adminEvents":
-            // Handle events update live if needed
-            break;
+  try {
+          switch (event.key) {
+            case "heroSection":
+              applyHeroSection(JSON.parse(event.newValue || '{}'));
+              break;
+            case "aboutSection":
+              applyAboutSection(JSON.parse(event.newValue || '{}'));
+              break;
+            case "adminActivities":
+              // re-render activities both on admin list and public grid
+              this.renderActivities();
+              break;
+            case "adminEvents":
+              this.renderEvents();
+              break;
+            case "historySection":
+              renderHistory();
+              break;
+            case "natureSection":
+              renderNature();
+              break;
+            case "rulesSection":
+              renderRules();
+              break;
+            case "magicSection":
+              renderMagic();
+              break;
+            case "contactInfo":
+              try { applyContactInfo(JSON.parse(event.newValue || '{}')); } catch {}
+              break;
+            case "footerText":
+              applyFooterText(event.newValue || '');
+              break;
+            default:
+              break;
+          }
+        } catch (err) {
+          console.error('Error handling storage event for', event.key, err);
         }
       });
     }
   
     loadAndApplyAllSections() {
-      ['heroSection', 'aboutSection', 'adminActivities', 'adminEvents'].forEach((key) => {
+      ['heroSection', 'aboutSection', 'adminActivities', 'adminEvents', 'historySection', 'natureSection', 'rulesSection', 'magicSection', 'contactInfo'].forEach((key) => {
         let data = localStorage.getItem(key);
         if (!data) return;
         try {
@@ -399,10 +444,19 @@ class ElegantMountainApp {
         switch(key){
           case 'heroSection': applyHeroSection(data); break;
           case 'aboutSection': applyAboutSection(data); break;
-          case 'adminActivities': renderActivities(); break;
-          case 'adminEvents': renderEvents(); break;
+          case 'adminActivities': this.renderActivities(); break;
+          case 'adminEvents': this.renderEvents(); break;
+          case 'historySection': renderHistory(); break;
+          case 'natureSection': renderNature(); break;
+          case 'rulesSection': renderRules(); break;
+          case 'magicSection': renderMagic(); break;
+          case 'contactInfo': applyContactInfo(data); break;
         }
       });
+
+      // footerText is stored as a plain string, not JSON
+      const footerText = localStorage.getItem('footerText');
+      if (footerText) applyFooterText(footerText);
     }
   }
   
@@ -430,8 +484,16 @@ class ElegantMountainApp {
     if(leadEl) leadEl.textContent = data.lead || '';
     const paragraphs = document.querySelectorAll(".about-narrative p");
     if(paragraphs.length >=2){
-      paragraphs[0].textContent = data.paragraph1 || '';
-      paragraphs[1].textContent = data.paragraph2 || '';
+      // support older shape (paragraph1/2) and newer shape (content)
+      if (data.paragraph1 || data.paragraph2) {
+        paragraphs[0].textContent = data.paragraph1 || '';
+        paragraphs[1].textContent = data.paragraph2 || '';
+      } else if (data.content) {
+        // split content into two paragraphs if possible
+        const parts = data.content.split('\n\n');
+        paragraphs[0].textContent = parts[0] || '';
+        paragraphs[1].textContent = parts.slice(1).join('\n\n') || '';
+      }
     }
     const imgEl = document.querySelector(".about-visual img");
     if(imgEl) imgEl.src = data.image || '';
@@ -491,6 +553,98 @@ class ElegantMountainApp {
   function applyFooterText(text) {
     const footerP = document.querySelector(".footer-bottom p");
     if (footerP) footerP.textContent = text || "";
+  }
+
+  // New section rendering functions
+  function renderHistory() {
+    const historyContent = document.getElementById("historyContent");
+    if (!historyContent) return;
+    
+    try {
+      const historyData = JSON.parse(localStorage.getItem("historySection")) || {};
+      historyContent.innerHTML = `
+        <div class="content-layout">
+          <div class="content-text">
+            <h3>${historyData.title || ""}</h3>
+            <div class="content-body">${historyData.content || ""}</div>
+          </div>
+          ${historyData.image ? `
+            <div class="content-image">
+              <img src="${historyData.image}" alt="História Podbanského">
+            </div>
+          ` : ""}
+        </div>
+      `;
+    } catch (err) {
+      console.error("Error rendering history section:", err);
+    }
+  }
+
+  function renderNature() {
+    const natureContent = document.getElementById("natureContent");
+    if (!natureContent) return;
+    
+    try {
+      const natureData = JSON.parse(localStorage.getItem("natureSection")) || {};
+      natureContent.innerHTML = `
+        <div class="content-layout">
+          <div class="content-text">
+            <h3>${natureData.title || ""}</h3>
+            <div class="content-body">${natureData.content || ""}</div>
+          </div>
+          ${natureData.image ? `
+            <div class="content-image">
+              <img src="${natureData.image}" alt="Príroda Podbanského">
+            </div>
+          ` : ""}
+        </div>
+      `;
+    } catch (err) {
+      console.error("Error rendering nature section:", err);
+    }
+  }
+
+  function renderRules() {
+    const rulesContent = document.getElementById("rulesContent");
+    if (!rulesContent) return;
+    
+    try {
+      const rulesData = JSON.parse(localStorage.getItem("rulesSection")) || {};
+      rulesContent.innerHTML = `
+        <div class="content-layout">
+          <div class="content-text">
+            <h3>${rulesData.title || ""}</h3>
+            <div class="content-body">${rulesData.content || ""}</div>
+          </div>
+        </div>
+      `;
+    } catch (err) {
+      console.error("Error rendering rules section:", err);
+    }
+  }
+
+  function renderMagic() {
+    const magicContent = document.getElementById("magicContent");
+    if (!magicContent) return;
+    
+    try {
+      const magicData = JSON.parse(localStorage.getItem("magicSection")) || {};
+      magicContent.innerHTML = `
+        <div class="content-layout">
+          <div class="content-text">
+            <h3>${magicData.title || ""}</h3>
+            <div class="content-body">${magicData.content || ""}</div>
+          </div>
+          ${magicData.image ? `
+            <div class="content-image">
+              <img src="${magicData.image}" alt="Magické Podbanské">
+            </div>
+          ` : ""}
+        </div>
+      `;
+    } catch (err) {
+      console.error("Error rendering magic section:", err);
+    }
   }
   
   // ---------------------------------
