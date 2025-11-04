@@ -41,7 +41,8 @@ if (!IS_CONFIG_FILLED) {
     const { getFirestore, doc, getDoc, setDoc, onSnapshot } = firestoreModule;
   const { getAnalytics } = analyticsModule;
   const { getStorage, ref, uploadBytes, getDownloadURL } = storageModule;
-  const analytics = getAnalytics(app);
+  // Analytics can be unsupported on file:// or non-HTTPS; don't fail init because of that.
+  try { getAnalytics(app); } catch (e) { console.info('firebase-init: Analytics disabled:', e?.message || e); }
   const storage = getStorage(app);
 
     // Expose Firebase Storage functions globally
@@ -55,7 +56,7 @@ if (!IS_CONFIG_FILLED) {
     };
     const db = getFirestore();
 
-    // Map of localStorage keys to Firestore document paths
+  // Map of localStorage keys to Firestore document paths
     const KEY_DOC_MAP = {
       heroSection: ['site', 'hero'],
       aboutSection: ['site', 'about'],
@@ -73,6 +74,17 @@ if (!IS_CONFIG_FILLED) {
       const path = KEY_DOC_MAP[key];
       if (!path) return null;
       return doc(db, path[0], path[1]);
+    };
+
+    // Fire a synthetic storage event on this document so app.js refreshes instantly
+    const fireSyntheticStorageEvent = (key, newValue) => {
+      try {
+        const evt = new StorageEvent('storage', { key, newValue, storageArea: localStorage });
+        window.dispatchEvent(evt);
+      } catch (_) {
+        // Fallback custom event if StorageEvent cannot be constructed
+        window.dispatchEvent(new CustomEvent('podbanske:storage-updated', { detail: { key, newValue } }));
+      }
     };
 
     // Read Firestore docs and populate localStorage
@@ -93,8 +105,11 @@ if (!IS_CONFIG_FILLED) {
             // store JSON string for objects/arrays; for plain strings ensure string
             if (typeof toStore === 'string') {
               localStorage.setItem(key, toStore);
+              fireSyntheticStorageEvent(key, toStore);
             } else {
-              localStorage.setItem(key, JSON.stringify(toStore));
+              const json = JSON.stringify(toStore);
+              localStorage.setItem(key, json);
+              fireSyntheticStorageEvent(key, json);
             }
           }
         } catch (err) {
@@ -113,8 +128,11 @@ if (!IS_CONFIG_FILLED) {
           let toStore = (Object.keys(data).length === 1 && Object.prototype.hasOwnProperty.call(data, 'value')) ? data.value : data;
           if (typeof toStore === 'string') {
             localStorage.setItem(key, toStore);
+            fireSyntheticStorageEvent(key, toStore);
           } else {
-            localStorage.setItem(key, JSON.stringify(toStore));
+            const json = JSON.stringify(toStore);
+            localStorage.setItem(key, json);
+            fireSyntheticStorageEvent(key, json);
           }
         }, (err) => console.error('firebase-init snapshot error for', key, err));
       }
@@ -132,7 +150,7 @@ if (!IS_CONFIG_FILLED) {
           await setDoc(ref, { value: parsed }, { merge: true });
         } else {
           // parsed is object/array - write as the doc content
-          await setDoc(ref, parsed);
+          await setDoc(ref, parsed, { merge: true });
         }
       } catch (err) {
         console.error('firebase-init save failed for', key, err);
