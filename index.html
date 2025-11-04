@@ -5,7 +5,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Občianske združenie Podbanské | Dedičstvo hôr pre budúce generácie</title>
     <meta name="description" content="Prestižne občianske združenie dedikované ochrane prírodného dedičstva Vysokých Tatier a rozvoju udržateľnej horskej komunity.">
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="new-sections.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -32,12 +33,12 @@
                 <span class="nav-toggle-bar"></span>
             </button>
             <ul class="nav-menu" id="navMenu">
-                <li><a href="#home" class="nav-link active">Domov</a></li>
-                <li><a href="#about" class="nav-link">O združení</a></li>
-                <li><a href="#activities" class="nav-link">Naša činnosť</a></li>
-                <li><a href="#impact" class="nav-link">Výsledky</a></li>
-                <li><a href="#team" class="nav-link">Tím</a></li>
-                <li><a href="#contact" class="nav-link">Kontakt</a></li>
+                <li><a href="#about" class="nav-link active">O nás</a></li>
+                <li><a href="#activities" class="nav-link">Aktivity</a></li>
+                <li><a href="#history" class="nav-link">História</a></li>
+                <li><a href="#nature" class="nav-link">Príroda</a></li>
+                <li><a href="#rules" class="nav-link">Pravidlá</a></li>
+                <li><a href="#magic" class="nav-link">Magické Podbanské</a></li>
             </ul>
         </div>
         <script>
@@ -137,62 +138,54 @@
         </div>
     </section>
 
-    <!-- Impact Metrics Section -->
-    <section id="impact" class="section-impact">
-        <div class="impact-background">
-            <div class="impact-overlay"></div>
-        </div>
-        <div class="container">
-            <header class="section-header centered light">
-                <p class="section-eyebrow light">Naše výsledky</p>
-                <h2 class="section-title light">Dopad na komunitu</h2>
-            </header>
-            
-            <div class="metrics-grid">
-                <div class="metric-card">
-                    <div class="metric-value">15<span class="metric-unit">km</span></div>
-                    <div class="metric-label">Obnovených chodníkov</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">2,340</div>
-                    <div class="metric-label">Vysadených stromov</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">120</div>
-                    <div class="metric-label">Podporených obyvateľov</div>
-                </div>
-                <div class="metric-card">
-                    <div class="metric-value">47</div>
-                    <div class="metric-label">Uskutočnených projektû</div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Events Section -->
-    <section id="events" class="section-events">
+    <!-- História Section -->
+    <section id="history" class="section-history">
         <div class="container">
             <header class="section-header">
-                <p class="section-eyebrow">Nadchádzajúce podujatia</p>
-                <h2 class="section-title">Kultivované stretnutia komunity</h2>
+                <p class="section-eyebrow">História</p>
+                <h2 class="section-title">Bohatá história Podbanského</h2>
             </header>
-            
-            <div class="events-timeline" id="eventsTimeline">
-                <!-- Events will be rendered here -->
+            <div class="history-content" id="historyContent">
+                <!-- Content will be loaded from Firebase -->
             </div>
         </div>
     </section>
 
-    <!-- Team Section -->
-    <section id="team" class="section-team">
+    <!-- Príroda Section -->
+    <section id="nature" class="section-nature">
         <div class="container">
-            <header class="section-header centered">
-                <p class="section-eyebrow">Vodcovský tím</p>
-                <h2 class="section-title">Expertiza a zaväzok</h2>
+            <header class="section-header">
+                <p class="section-eyebrow">Príroda</p>
+                <h2 class="section-title">Prírodné bohatstvo</h2>
             </header>
-            
-            <div class="team-grid" id="teamGrid">
-                <!-- Team members will be rendered here (with images) -->
+            <div class="nature-content" id="natureContent">
+                <!-- Content will be loaded from Firebase -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Pravidlá Section -->
+    <section id="rules" class="section-rules">
+        <div class="container">
+            <header class="section-header">
+                <p class="section-eyebrow">Pravidlá</p>
+                <h2 class="section-title">Pravidlá a poriadok</h2>
+            </header>
+            <div class="rules-content" id="rulesContent">
+                <!-- Content will be loaded from Firebase -->
+            </div>
+        </div>
+    </section>
+
+    <!-- Magické Podbanské Section -->
+    <section id="magic" class="section-magic">
+        <div class="container">
+            <header class="section-header">
+                <p class="section-eyebrow">Magické Podbanské</p>
+                <h2 class="section-title">Čaro nášho regiónu</h2>
+            </header>
+            <div class="magic-content" id="magicContent">
+                <!-- Content will be loaded from Firebase -->
             </div>
         </div>
     </section>
@@ -319,6 +312,7 @@
         </div>
     </footer>
 
-    <script src="app.js"></script>
+    <script type="module" src="firebase-init.js"></script>
+    <script type="module" src="app.js"></script>
 </body>
 </html>
