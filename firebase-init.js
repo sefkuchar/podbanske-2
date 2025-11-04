@@ -14,7 +14,8 @@ const FIREBASE_CONFIG = {
   apiKey: "AIzaSyDhyFdDyZwz7ZGVCRhiwQiIFH-8wrr9IKY",
   authDomain: "podbanske-c09cc.firebaseapp.com",
   projectId: "podbanske-c09cc",
-  storageBucket: "podbanske-c09cc.firebasestorage.app",
+  // IMPORTANT: Firebase Storage bucket should use appspot.com domain
+  storageBucket: "podbanske-c09cc.appspot.com",
   messagingSenderId: "719230424399",
   appId: "1:719230424399:web:13c2195825508dee79e13a",
   measurementId: "G-YY4TW2VJQC"
@@ -29,24 +30,26 @@ if (!IS_CONFIG_FILLED) {
 } else {
   // Use ESM CDN imports for the modular SDK
   import('https://www.gstatic.com/firebasejs/9.23.0/firebase-app.js').then(({ initializeApp }) => {
+    const app = initializeApp(FIREBASE_CONFIG);
     return Promise.all([
-      initializeApp(FIREBASE_CONFIG),
+      Promise.resolve(app),
       import('https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore.js'),
       import('https://www.gstatic.com/firebasejs/9.23.0/firebase-analytics.js'),
       import('https://www.gstatic.com/firebasejs/9.23.0/firebase-storage.js')
     ]);
   }).then(([app, firestoreModule, analyticsModule, storageModule]) => {
     const { getFirestore, doc, getDoc, setDoc, onSnapshot } = firestoreModule;
-    const { getAnalytics } = analyticsModule;
-    const { getStorage, ref, uploadBytes, getDownloadURL } = storageModule;
-    const analytics = getAnalytics();
-    const storage = getStorage();
+  const { getAnalytics } = analyticsModule;
+  const { getStorage, ref, uploadBytes, getDownloadURL } = storageModule;
+  const analytics = getAnalytics(app);
+  const storage = getStorage(app);
 
     // Expose Firebase Storage functions globally
     window.firebaseStorage = {
       uploadImage: async (file, path) => {
         const storageRef = ref(storage, path);
-        const snapshot = await uploadBytes(storageRef, file);
+        // Ensure a content-type is set so images are served correctly
+        const snapshot = await uploadBytes(storageRef, file, { contentType: file.type || 'application/octet-stream' });
         return getDownloadURL(snapshot.ref);
       }
     };
