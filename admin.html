@@ -25,13 +25,99 @@ body {
   padding: var(--space-6);
   color: var(--text-primary);
 }
+
+.admin-section-layout {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-6);
+  align-items: start;
+}
+
+.preview-panel {
+  background: var(--neutral-off-white);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid rgba(0,0,0,0.1);
+}
+
+.hero-preview {
+  background: rgba(0,0,0,0.8);
+  color: white;
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  min-height: 300px;
+  position: relative;
+}
+
+.preview-content {
+  max-width: 600px;
+}
+
+.preview-eyebrow {
+  color: var(--accent-gold);
+  font-weight: 600;
+  margin-bottom: 0.5em;
+}
+
+.preview-headline {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  margin: 0.5em 0;
+}
+
+.preview-description {
+  font-size: 1.1em;
+  line-height: 1.5;
+}
+
+.about-preview {
+  display: grid;
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.preview-image img {
+  width: 100%;
+  max-height: 200px;
+  object-fit: cover;
+  border-radius: var(--radius-lg);
+}
+
+.preview-lead {
+  font-size: 1.2em;
+  color: var(--primary-brown);
+  font-weight: 500;
+  margin-bottom: 1em;
+}
+
+.preview-text {
+  color: var(--text-secondary);
+  line-height: 1.6;
+}
+
+.contact-preview {
+  background: var(--neutral-off-white);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+}
+
+.contact-preview h4 {
+  color: var(--primary-brown);
+  margin-top: 0;
+}
+
+.contact-preview p {
+  color: var(--text-secondary);
+  margin: 0.5em 0;
+}
 .hidden { display: none !important; }
-h1, h2 {
+h1, h2, h3 {
   font-family: var(--font-display);
   color: var(--primary-brown);
 }
 h1 { font-size: 2rem; margin-bottom: var(--space-4); }
 h2 { margin-top: 0; margin-bottom: var(--space-4); }
+h3 { font-size: 1.2rem; margin: var(--space-4) 0; }
 .admin-page {
   max-width: 1100px;
   margin: 0 auto;
@@ -57,7 +143,7 @@ input[type=text], input[type=password], input[type=email], input[type=file], tex
   box-sizing: border-box;
 }
 textarea {
-  min-height: 80px;
+  min-height: 120px;
   resize: vertical;
 }
 button {
@@ -114,41 +200,16 @@ button.btn-danger:hover {
   padding: 0.5em;
   background: #fafafa;
 }
-
-/* Scrollbar for item list */
-.item-list::-webkit-scrollbar {
-  width: 8px;
-}
-.item-list::-webkit-scrollbar-thumb {
-  background-color: #B8860B;
-  border-radius: 4px;
-}
-.item-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 6px 8px;
-  margin-bottom: 6px;
-  background: white;
-  border-radius: 6px;
-  box-shadow: 0 1px 4px rgba(0,0,0,0.05);
-}
-
-.item-row button {
-  min-width: 60px;
-  font-size: 0.9em;
-  font-weight: 600;
-  padding: 0.35em 0.7em;
-}
 label {
   font-weight: 600;
+  margin-bottom: 0.3em;
+  display: block;
 }
 </style>
 </head>
 <body>
 
 <div class="admin-page">
-
   <!-- Status Notification -->
   <div id="statusMessage" class="status-message"></div>
 
@@ -156,10 +217,14 @@ label {
   <section id="adminLoginScreen">
     <h1>Prihlásenie do administrácie</h1>
     <form id="adminLoginForm">
-      <label for="adminUsername">Používateľské meno</label>
-      <input type="text" id="adminUsername" required autocomplete="username" />
-      <label for="adminPassword">Heslo</label>
-      <input type="password" id="adminPassword" required autocomplete="current-password" />
+      <div class="form-group">
+        <label for="adminUsername">Používateľské meno</label>
+        <input type="text" id="adminUsername" required>
+      </div>
+      <div class="form-group">
+        <label for="adminPassword">Heslo</label>
+        <input type="password" id="adminPassword" required>
+      </div>
       <button type="submit">Prihlásiť sa</button>
     </form>
     <div id="adminLoginError" style="color:red; display:none; margin-top:1em;"></div>
@@ -170,51 +235,92 @@ label {
     <h1>Administrátorský panel</h1>
     <button id="logoutBtn" style="margin-bottom:15px;">Odhlásiť sa</button>
 
-    <!-- Navigation Management -->
-    <div class="admin-section">
-      <h2>Správa navigácie</h2>
-      <form id="navEditForm">
-        <label for="navItemLabel">Názov odkazu</label>
-        <input type="text" id="navItemLabel" placeholder="Napr. Domov" required />
-        <label for="navItemHref">Href (napr. #home)</label>
-        <input type="text" id="navItemHref" placeholder="Napr. #home" required />
-        <button type="submit">Pridať / Uložiť odkaz</button>
-      </form>
-      <div id="navList" class="item-list"></div>
-    </div>
-
     <!-- Hero Section Management -->
     <div class="admin-section">
-      <h2>Správa hlavnej sekcie (Hero)</h2>
-      <form id="heroEditForm">
-        <label for="heroEyebrow">Text obslužnej linky</label>
-        <input type="text" id="heroEyebrow" placeholder="Malý text nad hlavným nadpisom" />
-        <label for="heroMainHeadline">Hlavný nadpis</label>
-        <input type="text" id="heroMainHeadline" placeholder="Hlavný veľký nadpis" />
-        <label for="heroSubHeadline">Podnadpis</label>
-        <input type="text" id="heroSubHeadline" placeholder="Krátky podnadpis" />
-        <label for="heroDescription">Popis</label>
-        <textarea id="heroDescription" placeholder="Detailnejší popis"></textarea>
-        <label for="heroBackgroundImage">Nahrať obrázok pozadia</label>
-        <input type="file" id="heroBackgroundImage" accept="image/*" />
-        <button type="submit">Uložiť zmeny</button>
-      </form>
+      <h2>Správa úvodnej sekcie</h2>
+      <div class="admin-section-layout">
+        <div class="edit-panel">
+          <form id="heroEditForm">
+            <label for="heroEyebrow">Nadpis nad hlavným titulkom</label>
+            <input type="text" id="heroEyebrow">
+            
+            <label for="heroMainHeadline">Hlavný titulok</label>
+            <input type="text" id="heroMainHeadline">
+            
+            <label for="heroSubHeadline">Podtitulok</label>
+            <input type="text" id="heroSubHeadline">
+            
+            <label for="heroDescription">Popis</label>
+            <textarea id="heroDescription"></textarea>
+            
+            <label for="heroBackgroundImageFile">Pozadie (Vybrať obrázok)</label>
+            <input type="file" id="heroBackgroundImageFile" accept="image/*">
+            <input type="hidden" id="heroBackgroundImage">
+            
+            <button type="submit">Uložiť zmeny</button>
+          </form>
+        </div>
+        <div class="preview-panel">
+          <h3>Náhľad sekcie</h3>
+          <div class="hero-preview" id="heroPreview">
+            <div class="preview-content">
+              <p class="preview-eyebrow"></p>
+              <h2 class="preview-headline"></h2>
+              <p class="preview-description"></p>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
 
-    <!-- About Section Management -->
+    <!-- O nás Management -->
     <div class="admin-section">
       <h2>Správa sekcie O nás</h2>
-      <form id="aboutEditForm">
-        <label for="aboutLeadText">Úvodný text</label>
-        <textarea id="aboutLeadText" placeholder="Vzdelávací a informačný text"></textarea>
-        <label for="aboutParagraph1">Prvý odsek</label>
-        <textarea id="aboutParagraph1" placeholder="Podrobný prvý odsek"></textarea>
-        <label for="aboutParagraph2">Druhý odsek</label>
-        <textarea id="aboutParagraph2" placeholder="Podrobný druhý odsek"></textarea>
-        <label for="aboutImage">URL obrázku (voliteľné)</label>
-        <input type="text" id="aboutImage" placeholder="URL obrázku (napr. https://...)" />
-        <button type="submit">Uložiť zmeny</button>
-      </form>
+      <div class="admin-section-layout">
+        <div class="edit-panel">
+          <form id="aboutEditForm">
+            <label for="aboutLeadText">Hlavný text</label>
+            <textarea id="aboutLeadText" required></textarea>
+            
+            <label for="aboutContent">Obsah</label>
+            <textarea id="aboutContent" required></textarea>
+            
+            <label for="aboutImageFile">Obrázok</label>
+            <input type="file" id="aboutImageFile" accept="image/*">
+            <input type="hidden" id="aboutImage">
+
+            <h3>Kontaktné údaje</h3>
+            <label for="contactAddress">Adresa</label>
+            <textarea id="contactAddress"></textarea>
+
+            <label for="contactPhone">Telefón</label>
+            <input type="text" id="contactPhone">
+
+            <label for="contactEmail">Email</label>
+            <input type="email" id="contactEmail">
+            
+            <button type="submit">Uložiť zmeny</button>
+          </form>
+        </div>
+        <div class="preview-panel">
+          <h3>Náhľad sekcie</h3>
+          <div class="about-preview" id="aboutPreview">
+            <div class="preview-image">
+              <img src="" alt="Náhľad obrázku">
+            </div>
+            <div class="preview-content">
+              <div class="preview-lead"></div>
+              <div class="preview-text"></div>
+            </div>
+          </div>
+          <div class="contact-preview" id="contactPreview">
+            <h4>Kontaktné údaje</h4>
+            <p class="preview-address"></p>
+            <p class="preview-phone"></p>
+            <p class="preview-email"></p>
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- Activities Management -->
@@ -222,61 +328,100 @@ label {
       <h2>Správa aktivít</h2>
       <form id="addActivityForm">
         <label for="activityTitle">Názov aktivity</label>
-        <input type="text" id="activityTitle" placeholder="Názov aktivity" required />
+        <input type="text" id="activityTitle" required>
+        
         <label for="activityDescription">Popis</label>
-        <textarea id="activityDescription" placeholder="Popis aktivity" required></textarea>
+        <textarea id="activityDescription" required></textarea>
+        
         <label for="activityCategory">Kategória</label>
-        <input type="text" id="activityCategory" placeholder="Environment, Community, atď." />
-        <label for="activityImpact">Výsledok</label>
-        <input type="text" id="activityImpact" placeholder="Dosiahnuté výsledky" />
-        <label for="activityImage">Nahrať obrázok</label>
-        <input type="file" id="activityImage" accept="image/*" />
-        <button type="submit">Pridať / Uložiť aktivitu</button>
+        <input type="text" id="activityCategory">
+        
+        <label for="activityImageFile">Obrázok</label>
+        <input type="file" id="activityImageFile" accept="image/*">
+        <input type="hidden" id="activityImage">
+        
+        <button type="submit">Pridať/Upraviť aktivitu</button>
       </form>
       <div id="activityList" class="item-list"></div>
     </div>
 
-    <!-- Events Management -->
+    <!-- História Management -->
     <div class="admin-section">
-      <h2>Správa podujatí</h2>
-      <form id="addEventForm">
-        <label for="eventTitle">Názov podujatia</label>
-        <input type="text" id="eventTitle" required />
-        <label for="eventDate">Dátum</label>
-        <input type="text" id="eventDate" placeholder="Napr. 15. december 2024" />
-        <label for="eventPlace">Miesto (voliteľné)</label>
-        <input type="text" id="eventPlace" />
-        <label for="eventDescription">Popis</label>
-        <textarea id="eventDescription"></textarea>
-        <button type="submit">Pridať / Uložiť podujatie</button>
+      <h2>Správa histórie</h2>
+      <form id="historyEditForm">
+        <label for="historyTitle">Nadpis</label>
+        <input type="text" id="historyTitle" required>
+        
+        <label for="historyContent">Obsah</label>
+        <textarea id="historyContent" required></textarea>
+        
+        <label for="historyImageFile">Obrázok</label>
+        <input type="file" id="historyImageFile" accept="image/*">
+        <input type="hidden" id="historyImage">
+        
+        <button type="submit">Uložiť zmeny</button>
       </form>
-      <div id="eventList" class="item-list"></div>
     </div>
 
-    <!-- Contact Info Management -->
+    <!-- Príroda Management -->
     <div class="admin-section">
-      <h2>Kontakt</h2>
-      <form id="contactEditForm">
-        <label for="contactAddress">Adresa</label>
-        <textarea id="contactAddress" placeholder="Adresa združenia"></textarea>
-        <label for="contactPhone">Telefón</label>
-        <input type="text" id="contactPhone" placeholder="+421 902 123 456" />
-        <label for="contactEmail">E-mail</label>
-        <input type="email" id="contactEmail" placeholder="info@ozpodbanske.sk" />
-        <button type="submit">Uložiť kontakt</button>
+      <h2>Správa sekcie Príroda</h2>
+      <form id="natureEditForm">
+        <label for="natureTitle">Nadpis</label>
+        <input type="text" id="natureTitle" required>
+        
+        <label for="natureContent">Obsah</label>
+        <textarea id="natureContent" required></textarea>
+        
+        <label for="natureImageFile">Obrázok</label>
+        <input type="file" id="natureImageFile" accept="image/*">
+        <input type="hidden" id="natureImage">
+        
+        <button type="submit">Uložiť zmeny</button>
+      </form>
+    </div>
+
+    <!-- Pravidlá Management -->
+    <div class="admin-section">
+      <h2>Správa pravidiel</h2>
+      <form id="rulesEditForm">
+        <label for="rulesTitle">Nadpis</label>
+        <input type="text" id="rulesTitle" required>
+        
+        <label for="rulesContent">Obsah pravidiel</label>
+        <textarea id="rulesContent" required></textarea>
+        
+        <button type="submit">Uložiť zmeny</button>
+      </form>
+    </div>
+
+    <!-- Magické Podbanské Management -->
+    <div class="admin-section">
+      <h2>Správa sekcie Magické Podbanské</h2>
+      <form id="magicEditForm">
+        <label for="magicTitle">Nadpis</label>
+        <input type="text" id="magicTitle" required>
+        
+        <label for="magicContent">Obsah</label>
+        <textarea id="magicContent" required></textarea>
+        
+        <label for="magicImageFile">Obrázok</label>
+        <input type="file" id="magicImageFile" accept="image/*">
+        <input type="hidden" id="magicImage">
+        
+        <button type="submit">Uložiť zmeny</button>
       </form>
     </div>
 
     <!-- Footer Text Management -->
     <div class="admin-section">
-      <h2>Pätka stránky</h2>
+      <h2>Správa pätičky</h2>
       <form id="footerEditForm">
-        <label for="footerText">Text pätky</label>
-        <textarea id="footerText"></textarea>
-        <button type="submit">Uložiť</button>
+        <label for="footerText">Text v pätičke</label>
+        <input type="text" id="footerText">
+        <button type="submit">Uložiť text</button>
       </form>
     </div>
-
   </section>
 </div>
 
@@ -315,14 +460,12 @@ label {
     const password = document.getElementById("adminPassword").value.trim();
     if (username === "admin" && password === "podban2024") {
       sessionStorage.setItem("loggedIn", "true");
-      loginError.style.display = "none";
       showDashboard();
       loadAllDataToForms();
-      renderAdminLists();
+      loginError.style.display = "none";
     } else {
-      loginError.textContent = "Nesprávne prihlasovacie údaje.";
+      loginError.textContent = "Nesprávne prihlasovacie údaje";
       loginError.style.display = "block";
-      setTimeout(() => loginError.style.display = "none", 3000);
     }
   });
 
@@ -342,7 +485,10 @@ label {
     HERO: "heroSection",
     ABOUT: "aboutSection",
     ACTIVITIES: "adminActivities",
-    EVENTS: "adminEvents",
+    HISTORY: "historySection",
+    NATURE: "natureSection",
+    RULES: "rulesSection",
+    MAGIC: "magicSection",
     CONTACT: "contactInfo",
     FOOTER: "footerText",
   };
@@ -357,381 +503,443 @@ label {
       return defaultValue;
     }
   }
+  
   // Save data to localStorage
   function saveData(key, data) {
     localStorage.setItem(key, JSON.stringify(data));
   }
 
-  // ---- Navigation Management ----
-  const navEditForm = document.getElementById("navEditForm");
-  const navList = document.getElementById("navList");
-  let navData = getData(KEYS.NAV, [
-    { label: "Domov", href: "#home" },
-    { label: "O združení", href: "#about" },
-    { label: "Naša činnosť", href: "#activities" },
-    { label: "Výsledky", href: "#impact" },
-    { label: "Tím", href: "#team" },
-    { label: "Kontakt", href: "#contact" },
-  ]);
-  let navEditIndex = -1;
+  // Image Upload Helper
+  async function handleImageUpload(file, section) {
+    if (!file) return null;
+    // Try to use firebaseStorage if available, otherwise fallback to data URL
+    try {
+      if (window.firebaseStorage && typeof window.firebaseStorage.uploadImage === 'function') {
+        const path = `images/${section}/${Date.now()}_${file.name}`;
+        return await window.firebaseStorage.uploadImage(file, path);
+      }
+    } catch (err) {
+      console.warn('Firebase upload failed or not available:', err);
+    }
 
-  function renderNavItems() {
-    navList.innerHTML = navData.map((item, i) => `
-      <div class='item-row'>
-        <div><strong>${item.label}</strong> (${item.href})</div>
-        <div>
-          <button data-index="${i}" class="btn-edit-nav">Upraviť</button>
-          <button data-index="${i}" class="btn-delete-nav btn-danger">Vymazať</button>
-        </div>
-      </div>
-    `).join("");
-    navList.querySelectorAll(".btn-edit-nav").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const i = parseInt(btn.dataset.index);
-        navEditIndex = i;
-        const item = navData[i];
-        document.getElementById("navItemLabel").value = item.label;
-        document.getElementById("navItemHref").value = item.href;
-        notify("Upravujete navigačný odkaz");
+    // Fallback: convert file to data URL so previews and saving still work
+    try {
+      return await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = (e) => resolve(e.target.result);
+        reader.onerror = (e) => reject(e);
+        reader.readAsDataURL(file);
       });
-    });
-    navList.querySelectorAll(".btn-delete-nav").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const i = parseInt(btn.dataset.index);
-        if (confirm("Naozaj chcete vymazať tento odkaz?")) {
-          navData.splice(i, 1);
-          saveData(KEYS.NAV, navData);
-          renderNavItems();
-          notify("Odkaz bol vymazaný");
-        }
-      });
-    });
+    } catch (err) {
+      console.error('Failed to read file as DataURL:', err);
+      notify('Nahrávanie obrázka zlyhalo');
+      return null;
+    }
   }
-  navEditForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const label = document.getElementById("navItemLabel").value.trim();
-    const href = document.getElementById("navItemHref").value.trim();
-    if (!label || !href) {
-      alert("Vyplňte název a href");
-      return;
+
+    // Hero Section Management
+  const heroForm = document.getElementById("heroEditForm");
+  const heroImageFile = document.getElementById("heroBackgroundImageFile");
+  const heroImageHidden = document.getElementById("heroBackgroundImage");
+
+  // Hero preview update function
+  async function updateHeroPreview() {
+    const eyebrowText = document.getElementById("heroEyebrow").value;
+    const headlineText = document.getElementById("heroMainHeadline").value;
+    const descriptionText = document.getElementById("heroDescription").value;
+    
+    const previewPanel = document.querySelector(".hero-preview");
+    previewPanel.querySelector(".preview-eyebrow").textContent = eyebrowText;
+    previewPanel.querySelector(".preview-headline").textContent = headlineText;
+    previewPanel.querySelector(".preview-description").textContent = descriptionText;
+    
+    // Handle file input preview
+    const fileInput = document.getElementById("heroBackgroundImageFile");
+    if (fileInput.files && fileInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewPanel.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${e.target.result}')`;
+        previewPanel.style.backgroundSize = "cover";
+        previewPanel.style.backgroundPosition = "center";
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else if (heroImageHidden.value) {
+      previewPanel.style.backgroundImage = `linear-gradient(rgba(0,0,0,0.5), rgba(0,0,0,0.7)), url('${heroImageHidden.value}')`;
+      previewPanel.style.backgroundSize = "cover";
+      previewPanel.style.backgroundPosition = "center";
     }
-    if (navEditIndex >= 0) {
-      navData[navEditIndex] = { label, href };
-      navEditIndex = -1;
-      notify("Navigačný odkaz bol upravený");
-    } else {
-      navData.push({ label, href });
-      notify("Navigačný odkaz bol pridaný");
-    }
-    saveData(KEYS.NAV, navData);
-    navEditForm.reset();
-    renderNavItems();
+  }
+
+  // Update preview on input changes
+  ["heroEyebrow", "heroMainHeadline", "heroSubHeadline", "heroDescription"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateHeroPreview);
   });
 
-  // ---- Hero Section Management ----
-  const heroForm = document.getElementById("heroEditForm");
+  heroImageFile.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      notify("Nahrávam obrázok...");
+      const url = await handleImageUpload(file, 'hero');
+      if (url) {
+        heroImageHidden.value = url;
+        notify("Obrázok bol nahraný");
+        updateHeroPreview();
+      }
+    }
+  });
+
   heroForm.addEventListener("submit", async e => {
     e.preventDefault();
-    try {
-      const eyebrow = document.getElementById("heroEyebrow").value.trim();
-      const mainHeadline = document.getElementById("heroMainHeadline").value.trim();
-      const subHeadline = document.getElementById("heroSubHeadline").value.trim();
-      const description = document.getElementById("heroDescription").value.trim();
-      let backgroundImage = "";
+    const heroData = {
+      eyebrow: document.getElementById("heroEyebrow").value.trim(),
+      mainHeadline: document.getElementById("heroMainHeadline").value.trim(),
+      subHeadline: document.getElementById("heroSubHeadline").value.trim(),
+      description: document.getElementById("heroDescription").value.trim(),
+      backgroundImage: heroImageHidden.value
+    };
+    saveData(KEYS.HERO, heroData);
+    notify("Úvodná sekcia bola uložená");
+  });
 
-      const fileInput = document.getElementById("heroBackgroundImage");
-      if (fileInput.files && fileInput.files[0]) {
-        backgroundImage = await new Promise((resolve, reject) => {
-          const reader = new FileReader();
-          reader.onload = () => resolve(reader.result);
-          reader.onerror = () => reject("Nepodarilo načítať obrázok");
-          reader.readAsDataURL(fileInput.files[0]);
-        });
-      } else {
-        // Preserve old background if exists
-        const oldData = getData(KEYS.HERO, {});
-        backgroundImage = oldData.backgroundImage || "";
+  // About Section Management
+  const aboutForm = document.getElementById("aboutEditForm");
+  const aboutImageFile = document.getElementById("aboutImageFile");
+  const aboutImageHidden = document.getElementById("aboutImage");
+
+  // About section preview update function
+  function updateAboutPreview() {
+    const leadText = document.getElementById("aboutLeadText").value;
+    const contentText = document.getElementById("aboutContent").value;
+    const address = document.getElementById("contactAddress").value;
+    const phone = document.getElementById("contactPhone").value;
+    const email = document.getElementById("contactEmail").value;
+    
+    // Update about preview
+    const aboutPreview = document.getElementById("aboutPreview");
+    aboutPreview.querySelector(".preview-lead").textContent = leadText;
+    aboutPreview.querySelector(".preview-text").textContent = contentText;
+    
+    // Handle file input preview
+    const fileInput = document.getElementById("aboutImageFile");
+    const previewImg = aboutPreview.querySelector(".preview-image img");
+    
+    if (fileInput.files && fileInput.files[0]) {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        previewImg.src = e.target.result;
+        previewImg.style.display = "block";
+      };
+      reader.readAsDataURL(fileInput.files[0]);
+    } else if (aboutImageHidden.value) {
+      previewImg.src = aboutImageHidden.value;
+      previewImg.style.display = "block";
+    } else {
+      previewImg.style.display = "none";
+    }
+    
+    // Update contact preview
+    const contactPreview = document.getElementById("contactPreview");
+    contactPreview.querySelector(".preview-address").innerHTML = address.replace(/\n/g, "<br>");
+    contactPreview.querySelector(".preview-phone").textContent = phone;
+    contactPreview.querySelector(".preview-email").textContent = email;
+  }
+
+  // Update preview on input changes
+  ["aboutLeadText", "aboutContent", "contactAddress", "contactPhone", "contactEmail"].forEach(id => {
+    document.getElementById(id).addEventListener("input", updateAboutPreview);
+  });
+
+  aboutImageFile.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      notify("Nahrávam obrázok...");
+      const url = await handleImageUpload(file, 'about');
+      if (url) {
+        aboutImageHidden.value = url;
+        notify("Obrázok bol nahraný");
+        updateAboutPreview();
       }
-      const heroData = { eyebrow, mainHeadline, subHeadline, description, backgroundImage };
-      saveData(KEYS.HERO, heroData);
-      notify("Zmeny hlavnej sekcie uložené");
-      heroForm.reset();
-      fillHeroForm(heroData);
-    } catch (err) {
-      alert(err);
     }
   });
 
-  function fillHeroForm(data) {
-    document.getElementById("heroEyebrow").value = data.eyebrow || "";
-    document.getElementById("heroMainHeadline").value = data.mainHeadline || "";
-    document.getElementById("heroSubHeadline").value = data.subHeadline || "";
-    document.getElementById("heroDescription").value = data.description || "";
-  }
-
-  // ---- About Section Management ----
-  const aboutForm = document.getElementById("aboutEditForm");
   aboutForm.addEventListener("submit", e => {
     e.preventDefault();
-    const lead = document.getElementById("aboutLeadText").value.trim();
-    const para1 = document.getElementById("aboutParagraph1").value.trim();
-    const para2 = document.getElementById("aboutParagraph2").value.trim();
-    const image = document.getElementById("aboutImage").value.trim();
-    const aboutData = { lead, paragraph1: para1, paragraph2: para2, image };
+    const aboutData = {
+      lead: document.getElementById("aboutLeadText").value.trim(),
+      content: document.getElementById("aboutContent").value.trim(),
+      image: document.getElementById("aboutImage").value
+    };
     saveData(KEYS.ABOUT, aboutData);
+
+    const contactData = {
+      address: document.getElementById("contactAddress").value.trim(),
+      phone: document.getElementById("contactPhone").value.trim(),
+      email: document.getElementById("contactEmail").value.trim()
+    };
+    saveData(KEYS.CONTACT, contactData);
+    
     notify("Sekcia O nás bola uložená");
   });
 
-  // ---- Activities Management ----
+  // Activities Management
   const addActivityForm = document.getElementById("addActivityForm");
   const activityList = document.getElementById("activityList");
+  const activityImageFile = document.getElementById("activityImageFile");
+  const activityImageHidden = document.getElementById("activityImage");
   let activities = getData(KEYS.ACTIVITIES, []);
+
+  activityImageFile.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      notify("Nahrávam obrázok...");
+      const url = await handleImageUpload(file, 'activities');
+      if (url) {
+        activityImageHidden.value = url;
+        notify("Obrázok bol nahraný");
+      }
+    }
+  });
   let editActivityIndex = -1;
 
   function renderActivities() {
     activities = getData(KEYS.ACTIVITIES, []);
     if (!activities.length) {
-      activityList.innerHTML = "<em>Žiadne aktivity.</em>";
+      activityList.innerHTML = '<p style="text-align:center;color:#666;">Zatiaľ neboli pridané žiadne aktivity</p>';
       return;
     }
     activityList.innerHTML = activities.map((a,i) => `
       <div class="item-row">
-        <div style="display:flex; align-items:center;gap:0.5rem;">
-          ${a.image ? `<img src="${a.image}" alt="" style="max-width:70px; max-height:50px; object-fit:cover; border-radius:6px;">` : ""}
-          <div>
-            <strong>${a.title}</strong><br/>
-            <small>${a.category || ""} • ${a.impact || ""}</small>
-            <p style="margin:0;">${a.description}</p>
-          </div>
-        </div>
+        <span>${a.title}</span>
         <div>
-          <button data-index="${i}" class="edit-activity">Upraviť</button>
-          <button data-index="${i}" class="delete-activity btn-danger">Vymazať</button>
+          <button type="button" class="edit-activity" data-idx="${i}">Upraviť</button>
+          <button type="button" class="delete-activity btn-danger" data-idx="${i}">Zmazať</button>
         </div>
-      </div>    
+      </div>
     `).join("");
     attachActivityButtons();
   }
+
   function attachActivityButtons() {
     activityList.querySelectorAll(".edit-activity").forEach(btn => {
-      btn.onclick = () => {
-        editActivityIndex = parseInt(btn.dataset.index);
-        const a = activities[editActivityIndex];
-        if (!a) return;
-        document.getElementById("activityTitle").value = a.title;
-        document.getElementById("activityDescription").value = a.description;
-        document.getElementById("activityCategory").value = a.category || "";
-        document.getElementById("activityImpact").value = a.impact || "";
-        notify("Upravujete aktivitu");
+      btn.onclick = (e) => {
+        const idx = e.target.dataset.idx;
+        const activity = activities[idx];
+        document.getElementById("activityTitle").value = activity.title || "";
+        document.getElementById("activityDescription").value = activity.description || "";
+        document.getElementById("activityCategory").value = activity.category || "";
+        document.getElementById("activityImage").value = activity.image || "";
+        document.getElementById("activityImageFile").value = "";
+        editActivityIndex = parseInt(idx);
       };
     });
     activityList.querySelectorAll(".delete-activity").forEach(btn => {
-      btn.onclick = () => {
-        const i = parseInt(btn.dataset.index);
-        if (confirm("Naozaj vymazať túto aktivitu?")) {
-          activities.splice(i,1);
-          saveData(KEYS.ACTIVITIES, activities);
-          renderActivities();
-          notify("Aktivita bola vymazaná");
-          if (editActivityIndex === i) clearActivityForm();
-        }
+      btn.onclick = (e) => {
+        const idx = e.target.dataset.idx;
+        activities.splice(idx, 1);
+        saveData(KEYS.ACTIVITIES, activities);
+        renderActivities();
+        notify("Aktivita bola zmazaná");
       };
     });
   }
-  function clearActivityForm() {
-    editActivityIndex = -1;
-    addActivityForm.reset();
-  }
 
-  addActivityForm.addEventListener("submit", async e => {
+  addActivityForm.addEventListener("submit", e => {
     e.preventDefault();
-    const title = e.target.activityTitle.value.trim();
-    const description = e.target.activityDescription.value.trim();
-    const category = e.target.activityCategory.value.trim();
-    const impact = e.target.activityImpact.value.trim();
-    const imgInput = e.target.activityImage;
-    let image = "";
-    if (imgInput.files && imgInput.files[0]) {
-      image = await new Promise((res, rej) => {
-        const reader = new FileReader();
-        reader.onload = () => res(reader.result);
-        reader.onerror = () => rej("Nepodarilo sa načítať obrázok");
-        reader.readAsDataURL(imgInput.files[0]);
-      });
-    } else if (editActivityIndex >= 0 && activities[editActivityIndex]) {
-      image = activities[editActivityIndex].image || "";
-    }
-    if (!title || !description) {
-      alert("Názov a popis sú povinné.");
-      return;
-    }
+    const activity = {
+      title: document.getElementById("activityTitle").value.trim(),
+      description: document.getElementById("activityDescription").value.trim(),
+      category: document.getElementById("activityCategory").value.trim(),
+      image: document.getElementById("activityImage").value
+    };
+    
     if (editActivityIndex >= 0) {
-      activities[editActivityIndex] = { title, description, category, impact, image };
+      activities[editActivityIndex] = activity;
       notify("Aktivita bola upravená");
+      editActivityIndex = -1;
     } else {
-      activities.unshift({ title, description, category, impact, image });
+      activities.push(activity);
       notify("Aktivita bola pridaná");
     }
+    
     saveData(KEYS.ACTIVITIES, activities);
-    clearActivityForm();
+    addActivityForm.reset();
     renderActivities();
   });
 
-  // ---- Events Management ----
-  const addEventForm = document.getElementById("addEventForm");
-  const eventList = document.getElementById("eventList");
-  let events = getData(KEYS.EVENTS, []);
-  let editEventIndex = -1;
+  // História Management
+  const historyForm = document.getElementById("historyEditForm");
+  const historyImageFile = document.getElementById("historyImageFile");
+  const historyImageHidden = document.getElementById("historyImage");
 
-  function renderEvents() {
-    events = getData(KEYS.EVENTS, []);
-    if (!events.length) {
-      eventList.innerHTML = "<em>Žiadne podujatia.</em>";
-      return;
+  historyImageFile.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      notify("Nahrávam obrázok...");
+      const url = await handleImageUpload(file, 'history');
+      if (url) {
+        historyImageHidden.value = url;
+        notify("Obrázok bol nahraný");
+      }
     }
-    eventList.innerHTML = events.map((ev,i) => `
-      <div class="item-row">
-        <div>
-          <strong>${ev.title}</strong><br/>
-          <small>${ev.date || ""} ${ev.place ? `• ${ev.place}` : ""}</small>
-          <p style="margin:0;">${ev.description || ""}</p>
-        </div>
-        <div>
-          <button data-index="${i}" class="edit-event">Upraviť</button>
-          <button data-index="${i}" class="delete-event btn-danger">Vymazať</button>
-        </div>
-      </div>    
-    `).join("");
-    attachEventButtons();
-  }
-  function attachEventButtons() {
-    eventList.querySelectorAll(".edit-event").forEach(btn => {
-      btn.onclick = () => {
-        editEventIndex = parseInt(btn.dataset.index);
-        const ev = events[editEventIndex];
-        if (!ev) return;
-        document.getElementById("eventTitle").value = ev.title;
-        document.getElementById("eventDate").value = ev.date || "";
-        document.getElementById("eventPlace").value = ev.place || "";
-        document.getElementById("eventDescription").value = ev.description || "";
-        notify("Upravujete podujatie");
-      };
-    });
-    eventList.querySelectorAll(".delete-event").forEach(btn => {
-      btn.onclick = () => {
-        const i = parseInt(btn.dataset.index);
-        if (confirm("Naozaj vymazať toto podujatie?")) {
-          events.splice(i,1);
-          saveData(KEYS.EVENTS, events);
-          renderEvents();
-          notify("Podujatie bolo vymazané");
-          if (editEventIndex === i) clearEventForm();
-        }
-      };
-    });
-  }
-  function clearEventForm() {
-    editEventIndex = -1;
-    addEventForm.reset();
-  }
-  addEventForm.addEventListener("submit", e => {
-    e.preventDefault();
-    const title = e.target.eventTitle.value.trim();
-    const date = e.target.eventDate.value.trim();
-    const place = e.target.eventPlace.value.trim();
-    const description = e.target.eventDescription.value.trim();
-    if (!title) {
-      alert("Názov podujatia je povinný.");
-      return;
-    }
-    if (editEventIndex >= 0) {
-      events[editEventIndex] = { title, date, place, description };
-      notify("Podujatie bolo upravené");
-    } else {
-      events.unshift({ title, date, place, description });
-      notify("Podujatie bolo pridané");
-    }
-    saveData(KEYS.EVENTS, events);
-    clearEventForm();
-    renderEvents();
   });
 
-  // ---- Contact Info Management ----
-  const contactForm = document.getElementById("contactEditForm");
-  contactForm.addEventListener("submit", e => {
+  historyForm.addEventListener("submit", e => {
     e.preventDefault();
-    const address = document.getElementById("contactAddress").value.trim();
-    const phone = document.getElementById("contactPhone").value.trim();
-    const email = document.getElementById("contactEmail").value.trim();
-    if (!address) {
-      alert("Adresa je povinná.");
-      return;
-    }
-    saveData(KEYS.CONTACT, { address, phone, email });
-    notify("Kontakt bol uložený");
+    const historyData = {
+      title: document.getElementById("historyTitle").value.trim(),
+      content: document.getElementById("historyContent").value.trim(),
+      image: document.getElementById("historyImage").value
+    };
+    saveData(KEYS.HISTORY, historyData);
+    notify("História bola uložená");
   });
 
-  // ---- Footer Text Management ----
+  // Príroda Management
+  const natureForm = document.getElementById("natureEditForm");
+  const natureImageFile = document.getElementById("natureImageFile");
+  const natureImageHidden = document.getElementById("natureImage");
+
+  natureImageFile.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      notify("Nahrávam obrázok...");
+      const url = await handleImageUpload(file, 'nature');
+      if (url) {
+        natureImageHidden.value = url;
+        notify("Obrázok bol nahraný");
+      }
+    }
+  });
+
+  natureForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const natureData = {
+      title: document.getElementById("natureTitle").value.trim(),
+      content: document.getElementById("natureContent").value.trim(),
+      image: document.getElementById("natureImage").value
+    };
+    saveData(KEYS.NATURE, natureData);
+    notify("Sekcia Príroda bola uložená");
+  });
+
+  // Pravidlá Management
+  const rulesForm = document.getElementById("rulesEditForm");
+  rulesForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const rulesData = {
+      title: document.getElementById("rulesTitle").value.trim(),
+      content: document.getElementById("rulesContent").value.trim()
+    };
+    saveData(KEYS.RULES, rulesData);
+    notify("Pravidlá boli uložené");
+  });
+
+  // Magické Podbanské Management
+  const magicForm = document.getElementById("magicEditForm");
+  const magicImageFile = document.getElementById("magicImageFile");
+  const magicImageHidden = document.getElementById("magicImage");
+
+  magicImageFile.addEventListener("change", async (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      notify("Nahrávam obrázok...");
+      const url = await handleImageUpload(file, 'magic');
+      if (url) {
+        magicImageHidden.value = url;
+        notify("Obrázok bol nahraný");
+      }
+    }
+  });
+
+  magicForm.addEventListener("submit", e => {
+    e.preventDefault();
+    const magicData = {
+      title: document.getElementById("magicTitle").value.trim(),
+      content: document.getElementById("magicContent").value.trim(),
+      image: document.getElementById("magicImage").value
+    };
+    saveData(KEYS.MAGIC, magicData);
+    notify("Sekcia Magické Podbanské bola uložená");
+  });
+
+  // Footer Management
   const footerForm = document.getElementById("footerEditForm");
   footerForm.addEventListener("submit", e => {
     e.preventDefault();
     const text = document.getElementById("footerText").value.trim();
-    saveData(KEYS.FOOTER, text);
-    notify("Text pätky bol uložený");
+    localStorage.setItem(KEYS.FOOTER, text);
+    notify("Text pätičky bol uložený");
   });
 
-  // Load data to forms on dashboard start
-  function loadAllDataToForms() {
-    // Navigation
-    navData = getData(KEYS.NAV, navData);
-    renderNavItems();
-
-    // Hero
-    fillHeroForm(getData(KEYS.HERO, {
-      eyebrow: "", mainHeadline: "", subHeadline: "", description: "", backgroundImage: ""
-    }));
-
-    // About
-    const about = getData(KEYS.ABOUT, { lead: "", paragraph1: "", paragraph2: "", image: "" });
-    document.getElementById("aboutLeadText").value = about.lead;
-    document.getElementById("aboutParagraph1").value = about.paragraph1;
-    document.getElementById("aboutParagraph2").value = about.paragraph2;
-    document.getElementById("aboutImage").value = about.image;
-
-    // Activities
-    activities = getData(KEYS.ACTIVITIES, []);
-    renderActivities();
-
-    // Events
-    events = getData(KEYS.EVENTS, []);
-    renderEvents();
-
-    // Contact
-    const contact = getData(KEYS.CONTACT, { address: "", phone: "", email: "" });
-    document.getElementById("contactAddress").value = contact.address;
-    document.getElementById("contactPhone").value = contact.phone;
-    document.getElementById("contactEmail").value = contact.email;
-
-    // Footer
-    const footerText = localStorage.getItem(KEYS.FOOTER) || "";
-    document.getElementById("footerText").value = footerText;
+  // Load all data to forms
+  // Initialize preview panels
+  function initializePreviews() {
+    updateHeroPreview();
+    updateAboutPreview();
   }
 
-  // Clear all forms upon logout
+  function loadAllDataToForms() {
+    const heroData = getData(KEYS.HERO, {});
+    const aboutData = getData(KEYS.ABOUT, {});
+    const contactData = getData(KEYS.CONTACT, {});
+    const historyData = getData(KEYS.HISTORY, {});
+    const natureData = getData(KEYS.NATURE, {});
+    const rulesData = getData(KEYS.RULES, {});
+    const magicData = getData(KEYS.MAGIC, {});
+    const footerText = localStorage.getItem(KEYS.FOOTER);
+
+    // Fill hero form
+    document.getElementById("heroEyebrow").value = heroData.eyebrow || "";
+    document.getElementById("heroMainHeadline").value = heroData.mainHeadline || "";
+    document.getElementById("heroSubHeadline").value = heroData.subHeadline || "";
+    document.getElementById("heroDescription").value = heroData.description || "";
+    document.getElementById("heroBackgroundImage").value = heroData.backgroundImage || "";
+
+    // Fill about form (with contact)
+    document.getElementById("aboutLeadText").value = aboutData.lead || "";
+    document.getElementById("aboutContent").value = aboutData.content || "";
+    document.getElementById("aboutImage").value = aboutData.image || "";
+    document.getElementById("contactAddress").value = contactData.address || "";
+    document.getElementById("contactPhone").value = contactData.phone || "";
+    document.getElementById("contactEmail").value = contactData.email || "";
+
+    // Fill history form
+    document.getElementById("historyTitle").value = historyData.title || "";
+    document.getElementById("historyContent").value = historyData.content || "";
+    document.getElementById("historyImage").value = historyData.image || "";
+
+    // Fill nature form
+    document.getElementById("natureTitle").value = natureData.title || "";
+    document.getElementById("natureContent").value = natureData.content || "";
+    document.getElementById("natureImage").value = natureData.image || "";
+
+    // Fill rules form
+    document.getElementById("rulesTitle").value = rulesData.title || "";
+    document.getElementById("rulesContent").value = rulesData.content || "";
+
+    // Fill magic form
+    document.getElementById("magicTitle").value = magicData.title || "";
+    document.getElementById("magicContent").value = magicData.content || "";
+    document.getElementById("magicImage").value = magicData.image || "";
+
+    // Fill footer form
+    document.getElementById("footerText").value = footerText || "";
+
+    // Render lists
+    renderActivities();
+  }
+
+  // Clear all forms
   function clearForms() {
-    navEditForm.reset();
-    heroForm.reset();
-    aboutForm.reset();
-    addActivityForm.reset();
-    addEventForm.reset();
-    contactForm.reset();
-    footerForm.reset();
+    document.querySelectorAll("form").forEach(form => form.reset());
+    document.querySelectorAll('input[type="hidden"]').forEach(input => input.value = "");
+    activityList.innerHTML = "";
   }
 
   // Initial load if logged in
   if (checkLogin()) {
-    showDashboard();
     loadAllDataToForms();
+    initializePreviews();
   }
 })();
 </script>
