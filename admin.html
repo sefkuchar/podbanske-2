@@ -385,6 +385,7 @@ label {
         <input type="hidden" id="historyImage">
         
         <button type="submit">Uložiť zmeny</button>
+        <button type="button" id="deleteHistoryBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu História</button>
       </form>
     </div>
 
@@ -403,6 +404,7 @@ label {
         <input type="hidden" id="natureImage">
         
         <button type="submit">Uložiť zmeny</button>
+        <button type="button" id="deleteNatureBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Príroda</button>
       </form>
     </div>
 
@@ -417,6 +419,7 @@ label {
         <textarea id="rulesContent" required></textarea>
         
         <button type="submit">Uložiť zmeny</button>
+        <button type="button" id="deleteRulesBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Pravidlá</button>
       </form>
     </div>
 
@@ -435,6 +438,7 @@ label {
         <input type="hidden" id="magicImage">
         
         <button type="submit">Uložiť zmeny</button>
+        <button type="button" id="deleteMagicBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Magické Podbanské</button>
       </form>
     </div>
 
@@ -828,6 +832,17 @@ label {
     notify("História bola uložená");
   });
 
+  // Delete History button
+  document.getElementById("deleteHistoryBtn").addEventListener("click", () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu História? Táto akcia sa nedá vrátiť späť.")) {
+      localStorage.removeItem(KEYS.HISTORY);
+      document.getElementById("historyTitle").value = "";
+      document.getElementById("historyContent").value = "";
+      document.getElementById("historyImage").value = "";
+      notify("Sekcia História bola vymazaná");
+    }
+  });
+
   // Príroda Management
   const natureForm = document.getElementById("natureEditForm");
   const natureImageFile = document.getElementById("natureImageFile");
@@ -856,6 +871,17 @@ label {
     notify("Sekcia Príroda bola uložená");
   });
 
+  // Delete Nature button
+  document.getElementById("deleteNatureBtn").addEventListener("click", () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu Príroda? Táto akcia sa nedá vrátiť späť.")) {
+      localStorage.removeItem(KEYS.NATURE);
+      document.getElementById("natureTitle").value = "";
+      document.getElementById("natureContent").value = "";
+      document.getElementById("natureImage").value = "";
+      notify("Sekcia Príroda bola vymazaná");
+    }
+  });
+
   // Pravidlá Management
   const rulesForm = document.getElementById("rulesEditForm");
   rulesForm.addEventListener("submit", e => {
@@ -866,6 +892,16 @@ label {
     };
     saveData(KEYS.RULES, rulesData);
     notify("Pravidlá boli uložené");
+  });
+
+  // Delete Rules button
+  document.getElementById("deleteRulesBtn").addEventListener("click", () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu Pravidlá? Táto akcia sa nedá vrátiť späť.")) {
+      localStorage.removeItem(KEYS.RULES);
+      document.getElementById("rulesTitle").value = "";
+      document.getElementById("rulesContent").value = "";
+      notify("Sekcia Pravidlá bola vymazaná");
+    }
   });
 
   // Magické Podbanské Management
@@ -894,6 +930,17 @@ label {
     };
     saveData(KEYS.MAGIC, magicData);
     notify("Sekcia Magické Podbanské bola uložená");
+  });
+
+  // Delete Magic button
+  document.getElementById("deleteMagicBtn").addEventListener("click", () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu Magické Podbanské? Táto akcia sa nedá vrátiť späť.")) {
+      localStorage.removeItem(KEYS.MAGIC);
+      document.getElementById("magicTitle").value = "";
+      document.getElementById("magicContent").value = "";
+      document.getElementById("magicImage").value = "";
+      notify("Sekcia Magické Podbanské bola vymazaná");
+    }
   });
 
   // Footer Management
