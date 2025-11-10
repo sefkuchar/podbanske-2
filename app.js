@@ -107,7 +107,52 @@ class ElegantMountainApp {
         console.error('Error initializing default activities:', err);
       }
       
+      // Load data from data.json (GitHub workflow)
+      this.loadDataFromFile();
+      
       this.init();
+    }
+
+    // Load data from data.json file
+    async loadDataFromFile() {
+      try {
+        const response = await fetch('/data.json?t=' + Date.now()); // Cache bust
+        if (response.ok) {
+          const data = await response.json();
+          console.log('✅ Loaded data from data.json');
+          
+          // Save to localStorage so existing code works
+          if (data.hero && Object.keys(data.hero).length) {
+            localStorage.setItem('heroSection', JSON.stringify(data.hero));
+          }
+          if (data.about && Object.keys(data.about).length) {
+            localStorage.setItem('aboutSection', JSON.stringify(data.about));
+          }
+          if (data.activities && data.activities.length) {
+            localStorage.setItem('adminActivities', JSON.stringify(data.activities));
+          }
+          if (data.history && Object.keys(data.history).length) {
+            localStorage.setItem('historySection', JSON.stringify(data.history));
+          }
+          if (data.nature && Object.keys(data.nature).length) {
+            localStorage.setItem('natureSection', JSON.stringify(data.nature));
+          }
+          if (data.rules && Object.keys(data.rules).length) {
+            localStorage.setItem('rulesSection', JSON.stringify(data.rules));
+          }
+          if (data.magic && Object.keys(data.magic).length) {
+            localStorage.setItem('magicSection', JSON.stringify(data.magic));
+          }
+          if (data.contact && Object.keys(data.contact).length) {
+            localStorage.setItem('contactInfo', JSON.stringify(data.contact));
+          }
+          if (data.footer) {
+            localStorage.setItem('footerText', JSON.stringify(data.footer));
+          }
+        }
+      } catch (err) {
+        console.log('📁 data.json not found or error loading, using localStorage/defaults');
+      }
     }
 
     init() {
