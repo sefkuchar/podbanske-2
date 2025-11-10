@@ -233,7 +233,32 @@ label {
   <!-- DASHBOARD -->
   <section id="adminDashboard" class="hidden">
     <h1>Administrátorský panel</h1>
-    <button id="logoutBtn" style="margin-bottom:15px;">Odhlásiť sa</button>
+    <div style="display: flex; gap: 1rem; margin-bottom: 15px; flex-wrap: wrap;">
+      <button id="logoutBtn">Odhlásiť sa</button>
+      <button id="syncToGitHubBtn" style="background-color: #2563eb;">🚀 Publikovať zmeny (GitHub)</button>
+      <button id="setupGitHubBtn" style="background-color: #6b7280;">⚙️ Nastavenie GitHub</button>
+    </div>
+
+    <!-- GitHub Setup Modal (hidden by default) -->
+    <div id="githubSetupModal" class="hidden" style="background: white; padding: 2rem; border-radius: 0.5rem; margin-bottom: 1rem; border: 2px solid #2563eb;">
+      <h3>Nastavenie GitHub Sync</h3>
+      <p style="color: #666; margin-bottom: 1rem;">Pre automatické publikovanie zmien potrebujete GitHub Personal Access Token.</p>
+      
+      <label for="githubToken">GitHub Personal Access Token</label>
+      <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxx" style="margin-bottom: 1rem;">
+      <small style="display: block; color: #666; margin-bottom: 1rem;">
+        Vytvorte token na: <a href="https://github.com/settings/tokens/new" target="_blank">GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)</a><br>
+        Potrebné oprávnenia: <code>repo</code> (Full control of private repositories)
+      </small>
+      
+      <label for="githubRepo">Repository (username/repo-name)</label>
+      <input type="text" id="githubRepo" placeholder="napr: username/website-podbanske" style="margin-bottom: 1rem;">
+      
+      <div style="display: flex; gap: 1rem;">
+        <button onclick="saveGitHubConfig()" style="background-color: #16a34a;">💾 Uložiť nastavenie</button>
+        <button onclick="document.getElementById('githubSetupModal').classList.add('hidden')" style="background-color: #6b7280;">Zrušiť</button>
+      </div>
+    </div>
 
     <!-- Hero Section Management -->
     <div class="admin-section">
@@ -424,6 +449,9 @@ label {
     </div>
   </section>
 </div>
+
+<!-- GitHub Sync Module -->
+<script src="github-sync.js"></script>
 
 <!-- Firebase initialization & sync (Storage + Firestore) -->
 <script type="module" src="firebase-init.js"></script>
@@ -947,6 +975,60 @@ label {
     loadAllDataToForms();
     initializePreviews();
   }
+
+  // ========== GITHUB SYNC FUNCTIONALITY ==========
+  
+  // Setup GitHub button
+  document.getElementById("setupGitHubBtn").addEventListener("click", () => {
+    const modal = document.getElementById("githubSetupModal");
+    modal.classList.toggle("hidden");
+    
+    // Load existing config
+    const token = localStorage.getItem('github-token');
+    const repo = localStorage.getItem('github-repo');
+    if (token) document.getElementById("githubToken").value = token;
+    if (repo) document.getElementById("githubRepo").value = repo;
+  });
+
+  // Save GitHub config
+  window.saveGitHubConfig = function() {
+    const token = document.getElementById("githubToken").value.trim();
+    const repo = document.getElementById("githubRepo").value.trim();
+    
+    if (!token || !repo) {
+      alert("Vyplňte všetky polia!");
+      return;
+    }
+    
+    if (!repo.includes('/')) {
+      alert("Repository musí byť vo formáte: username/repo-name");
+      return;
+    }
+    
+    window.githubSync.setup(token, repo);
+    document.getElementById("githubSetupModal").classList.add("hidden");
+    notify("✅ GitHub nastavenie uložené!");
+  };
+
+  // Sync to GitHub button
+  document.getElementById("syncToGitHubBtn").addEventListener("click", async () => {
+    if (!window.githubSync.isConfigured()) {
+      alert("Najprv nastavte GitHub sync! Kliknite na '⚙️ Nastavenie GitHub'");
+      document.getElementById("githubSetupModal").classList.remove("hidden");
+      return;
+    }
+    
+    const confirmed = confirm("Publikovať všetky zmeny na GitHub?\n\nToto nahrá obsah na GitHub a Vercel automaticky nasadí zmeny.");
+    if (!confirmed) return;
+    
+    try {
+      await window.githubSync.syncToGitHub(notify);
+    } catch (error) {
+      notify("❌ Chyba: " + error.message);
+      console.error(error);
+    }
+  });
+
 })();
 </script>
 
