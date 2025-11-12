@@ -43,10 +43,20 @@ class GitHubSync {
       }
     });
     
+    if (response.status === 401) {
+      throw new Error('❌ Neplatný GitHub token! Vytvorte nový token na: https://github.com/settings/tokens/new (scope: repo)');
+    }
+    
+    if (response.status === 404) {
+      // File doesn't exist yet - this is OK for first upload
+      return null;
+    }
+    
     if (response.ok) {
       return await response.json();
     }
-    return null;
+    
+    throw new Error(`GitHub API error: ${response.status} ${response.statusText}`);
   }
 
   // Update or create file on GitHub
@@ -77,8 +87,22 @@ class GitHubSync {
     });
     
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.message || 'Failed to update file');
+      let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+      
+      try {
+        const error = await response.json();
+        if (response.status === 401) {
+          errorMsg = '❌ Neplatný GitHub token! Vytvorte nový token na: https://github.com/settings/tokens/new';
+        } else if (response.status === 404) {
+          errorMsg = `❌ Repozitár '${this.repo}' neexistuje alebo token nemá prístup!`;
+        } else {
+          errorMsg = error.message || errorMsg;
+        }
+      } catch (e) {
+        // Response is not JSON
+      }
+      
+      throw new Error(errorMsg);
     }
     
     return await response.json();
