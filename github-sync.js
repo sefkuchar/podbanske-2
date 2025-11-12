@@ -76,7 +76,7 @@ class GitHubSync {
       body.sha = currentFile.sha; // Required for updates
     }
     
-    const response = await fetch(url, {
+    let response = await fetch(url, {
       method: 'PUT',
       headers: {
         'Authorization': `token ${this.token}`,
@@ -86,6 +86,23 @@ class GitHubSync {
       body: JSON.stringify(body)
     });
     
+    // Handle possible SHA mismatch by retrying once with latest SHA
+    if (response.status === 409) {
+      const latest = await this.getFile(path);
+      if (latest && latest.sha && (!body.sha || latest.sha !== body.sha)) {
+        body.sha = latest.sha;
+        response = await fetch(url, {
+          method: 'PUT',
+          headers: {
+            'Authorization': `token ${this.token}`,
+            'Accept': 'application/vnd.github.v3+json',
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(body)
+        });
+      }
+    }
+
     if (!response.ok) {
       let errorMsg = `HTTP ${response.status}: ${response.statusText}`;
       
@@ -95,6 +112,8 @@ class GitHubSync {
           errorMsg = '❌ Neplatný GitHub token! Vytvorte nový token na: https://github.com/settings/tokens/new';
         } else if (response.status === 404) {
           errorMsg = `❌ Repozitár '${this.repo}' neexistuje alebo token nemá prístup!`;
+        } else if (response.status === 409) {
+          errorMsg = '🔁 Konflikt pri ukladaní: súbor sa medzitým zmenil. Skúste to znova o pár sekúnd.';
         } else {
           errorMsg = error.message || errorMsg;
         }
