@@ -304,6 +304,15 @@ label {
       <div class="admin-section-layout">
         <div class="edit-panel">
           <form id="aboutEditForm">
+            <label for="aboutEyebrow">Nadpis malými (napr. "O NAŠOM ZDRUŽENÍ")</label>
+            <input type="text" id="aboutEyebrow" placeholder="O NAŠOM ZDRUŽENÍ">
+            
+            <label for="aboutTitle">Hlavný nadpis</label>
+            <input type="text" id="aboutTitle" placeholder="Posvätenosť horám a komunite">
+            
+            <label for="aboutDescription">Popis pod nadpisom</label>
+            <textarea id="aboutDescription" placeholder="aa"></textarea>
+            
             <label for="aboutLeadText">Hlavný text</label>
             <textarea id="aboutLeadText" required></textarea>
             
@@ -351,6 +360,22 @@ label {
     <!-- Activities Management -->
     <div class="admin-section">
       <h2>Správa aktivít</h2>
+      
+      <h3 style="margin-bottom: 0.5em;">Nadpisy sekcie</h3>
+      <div style="background: #f0f8ff; padding: 1em; border-radius: 8px; margin-bottom: 1.5em;">
+        <label for="activitiesEyebrow">Malý nadpis (eyebrow)</label>
+        <input type="text" id="activitiesEyebrow" placeholder="napr. NAŠE AKTIVITY">
+        
+        <label for="activitiesTitle">Hlavný nadpis</label>
+        <input type="text" id="activitiesTitle" placeholder="Rozsiahla činnosť pre ochranu a rozvoj">
+        
+        <label for="activitiesDescription">Popis pod nadpisom</label>
+        <textarea id="activitiesDescription" rows="2" placeholder="Každý z našich projektov..."></textarea>
+        
+        <button type="button" id="saveActivitiesHeaderBtn" style="background: #28a745; margin-top: 0.5em;">💾 Uložiť nadpisy sekcie</button>
+      </div>
+      
+      <h3 style="margin-bottom: 0.5em;">Správa jednotlivých aktivít</h3>
       <form id="addActivityForm">
         <label for="activityTitle">Názov aktivity</label>
         <input type="text" id="activityTitle" required>
@@ -374,13 +399,25 @@ label {
     <div class="admin-section">
       <h2>Správa histórie</h2>
       <form id="historyEditForm">
-        <label for="historyTitle">Nadpis</label>
+        <label for="historyEyebrow">Malý nadpis (eyebrow)</label>
+        <input type="text" id="historyEyebrow" placeholder="napr. HISTÓRIA">
+        
+        <label for="historyTitle">Hlavný nadpis</label>
         <input type="text" id="historyTitle" required>
         
-        <label for="historyContent">Obsah</label>
+        <label for="historyDescription">Popis pod nadpisom</label>
+        <textarea id="historyDescription" rows="2" placeholder="Krátky popisný text"></textarea>
+        
+        <label for="historyContent">Úvodný text</label>
         <textarea id="historyContent" required></textarea>
         
-        <label for="historyImageFile">Obrázok</label>
+        <h3 style="margin-top: 1.5em; margin-bottom: 0.5em;">Podsekcie</h3>
+        <div id="historySubsectionsContainer">
+          <!-- Subsections will be rendered here -->
+        </div>
+        <button type="button" id="addHistorySubsectionBtn" style="background: #17a2b8; margin-top: 0.5em;">➕ Pridať podsekciu</button>
+        
+        <label for="historyImageFile" style="margin-top: 1em;">Obrázok</label>
         <input type="file" id="historyImageFile" accept="image/*">
         <input type="hidden" id="historyImage">
         
@@ -393,13 +430,25 @@ label {
     <div class="admin-section">
       <h2>Správa sekcie Príroda</h2>
       <form id="natureEditForm">
-        <label for="natureTitle">Nadpis</label>
+        <label for="natureEyebrow">Malý nadpis (eyebrow)</label>
+        <input type="text" id="natureEyebrow" placeholder="napr. PRÍRODA">
+        
+        <label for="natureTitle">Hlavný nadpis</label>
         <input type="text" id="natureTitle" required>
         
-        <label for="natureContent">Obsah</label>
+        <label for="natureDescription">Popis pod nadpisom</label>
+        <textarea id="natureDescription" rows="2" placeholder="Krátky popisný text"></textarea>
+        
+        <label for="natureContent">Úvodný text</label>
         <textarea id="natureContent" required></textarea>
         
-        <label for="natureImageFile">Obrázok</label>
+        <h3 style="margin-top: 1.5em; margin-bottom: 0.5em;">Podsekcie</h3>
+        <div id="natureSubsectionsContainer">
+          <!-- Subsections will be rendered here -->
+        </div>
+        <button type="button" id="addNatureSubsectionBtn" style="background: #17a2b8; margin-top: 0.5em;">➕ Pridať podsekciu</button>
+        
+        <label for="natureImageFile" style="margin-top: 1em;">Obrázok</label>
         <input type="file" id="natureImageFile" accept="image/*">
         <input type="hidden" id="natureImage">
         
@@ -412,13 +461,25 @@ label {
     <div class="admin-section">
       <h2>Správa pravidiel</h2>
       <form id="rulesEditForm">
-        <label for="rulesTitle">Nadpis</label>
+        <label for="rulesEyebrow">Malý nadpis (eyebrow)</label>
+        <input type="text" id="rulesEyebrow" placeholder="napr. PRAVIDLÁ">
+        
+        <label for="rulesTitle">Hlavný nadpis</label>
         <input type="text" id="rulesTitle" required>
         
-        <label for="rulesContent">Obsah pravidiel</label>
+        <label for="rulesDescription">Popis pod nadpisom</label>
+        <textarea id="rulesDescription" rows="2" placeholder="Krátky popisný text"></textarea>
+        
+        <label for="rulesContent">Úvodný text</label>
         <textarea id="rulesContent" required></textarea>
         
-        <button type="submit">Uložiť zmeny</button>
+        <h3 style="margin-top: 1.5em; margin-bottom: 0.5em;">Podsekcie</h3>
+        <div id="rulesSubsectionsContainer">
+          <!-- Subsections will be rendered here -->
+        </div>
+        <button type="button" id="addRulesSubsectionBtn" style="background: #17a2b8; margin-top: 0.5em;">➕ Pridať podsekciu</button>
+        
+        <button type="submit" style="margin-top: 1em;">Uložiť zmeny</button>
         <button type="button" id="deleteRulesBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Pravidlá</button>
       </form>
     </div>
@@ -427,17 +488,31 @@ label {
     <div class="admin-section">
       <h2>Správa sekcie Magické Podbanské</h2>
       <form id="magicEditForm">
-        <label for="magicTitle">Nadpis</label>
+        <label for="magicEyebrow">Malý nadpis (eyebrow)</label>
+        <input type="text" id="magicEyebrow" placeholder="napr. MAGICKÉ PODBANSKÉ">
+        
+        <label for="magicTitle">Hlavný nadpis</label>
         <input type="text" id="magicTitle" required>
         
-        <label for="magicContent">Obsah</label>
+        <label for="magicDescription">Popis pod nadpisom</label>
+        <textarea id="magicDescription" rows="2" placeholder="Krátky popisný text"></textarea>
+        
+        <label for="magicContent">Úvodný text</label>
         <textarea id="magicContent" required></textarea>
         
-        <label for="magicImageFile">Obrázok</label>
-        <input type="file" id="magicImageFile" accept="image/*">
-        <input type="hidden" id="magicImage">
+        <h3 style="margin-top: 1.5em; margin-bottom: 0.5em;">Podsekcie</h3>
+        <div id="magicSubsectionsContainer">
+          <!-- Subsections will be rendered here -->
+        </div>
+        <button type="button" id="addMagicSubsectionBtn" style="background: #17a2b8; margin-top: 0.5em;">➕ Pridať podsekciu</button>
         
-        <button type="submit">Uložiť zmeny</button>
+        <h3 style="margin-top: 1.5em; margin-bottom: 0.5em;">Obrázky</h3>
+        <div id="magicImagesContainer">
+          <!-- Images will be rendered here -->
+        </div>
+        <button type="button" id="addMagicImageBtn" style="background: #28a745; margin-top: 0.5em;">➕ Pridať obrázok</button>
+        
+        <button type="submit" style="margin-top: 1em;">Uložiť zmeny</button>
         <button type="button" id="deleteMagicBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Magické Podbanské</button>
       </form>
     </div>
@@ -519,6 +594,7 @@ label {
     HERO: "heroSection",
     ABOUT: "aboutSection",
     ACTIVITIES: "adminActivities",
+    ACTIVITIES_HEADER: "activitiesHeader",
     HISTORY: "historySection",
     NATURE: "natureSection",
     RULES: "rulesSection",
@@ -703,6 +779,9 @@ label {
   aboutForm.addEventListener("submit", e => {
     e.preventDefault();
     const aboutData = {
+      eyebrow: document.getElementById("aboutEyebrow").value.trim(),
+      title: document.getElementById("aboutTitle").value.trim(),
+      description: document.getElementById("aboutDescription").value.trim(),
       lead: document.getElementById("aboutLeadText").value.trim(),
       content: document.getElementById("aboutContent").value.trim(),
       image: document.getElementById("aboutImage").value
@@ -781,6 +860,17 @@ label {
     });
   }
 
+  // Activities header management
+  document.getElementById("saveActivitiesHeaderBtn").addEventListener("click", () => {
+    const headerData = {
+      eyebrow: document.getElementById("activitiesEyebrow").value.trim(),
+      title: document.getElementById("activitiesTitle").value.trim(),
+      description: document.getElementById("activitiesDescription").value.trim()
+    };
+    localStorage.setItem(KEYS.ACTIVITIES_HEADER, JSON.stringify(headerData));
+    notify("Nadpisy sekcie Aktivity boli uložené");
+  });
+
   addActivityForm.addEventListener("submit", e => {
     e.preventDefault();
     const activity = {
@@ -808,6 +898,45 @@ label {
   const historyForm = document.getElementById("historyEditForm");
   const historyImageFile = document.getElementById("historyImageFile");
   const historyImageHidden = document.getElementById("historyImage");
+  let historySubsections = [];
+
+  function renderHistorySubsections() {
+    const container = document.getElementById("historySubsectionsContainer");
+    if (!container) return;
+    
+    container.innerHTML = historySubsections.map((subsec, index) => `
+      <div style="border: 1px solid #ddd; padding: 1em; margin-bottom: 0.5em; border-radius: 8px; background: #f0f8ff;">
+        <div style="display: flex; justify-content: space-between; align-items: start; gap: 1em;">
+          <div style="flex: 1;">
+            <label>Nadpis podsekcie</label>
+            <input type="text" value="${subsec.title || ''}" onchange="updateHistorySubsectionTitle(${index}, this.value)" placeholder="Názov podsekcie" style="width: 100%; margin-bottom: 0.5em;">
+            
+            <label>Obsah podsekcie</label>
+            <textarea onchange="updateHistorySubsectionContent(${index}, this.value)" placeholder="Text podsekcie" rows="4" style="width: 100%;">${subsec.content || ''}</textarea>
+          </div>
+          <button type="button" onclick="removeHistorySubsection(${index})" style="background: #dc3545; padding: 0.5em 1em;">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.updateHistorySubsectionTitle = (index, title) => {
+    historySubsections[index].title = title;
+  };
+
+  window.updateHistorySubsectionContent = (index, content) => {
+    historySubsections[index].content = content;
+  };
+
+  window.removeHistorySubsection = (index) => {
+    historySubsections.splice(index, 1);
+    renderHistorySubsections();
+  };
+
+  document.getElementById("addHistorySubsectionBtn").addEventListener("click", () => {
+    historySubsections.push({ title: '', content: '' });
+    renderHistorySubsections();
+  });
 
   historyImageFile.addEventListener("change", async (e) => {
     const file = e.target.files[0];
@@ -824,8 +953,11 @@ label {
   historyForm.addEventListener("submit", e => {
     e.preventDefault();
     const historyData = {
+      eyebrow: document.getElementById("historyEyebrow").value.trim(),
       title: document.getElementById("historyTitle").value.trim(),
+      description: document.getElementById("historyDescription").value.trim(),
       content: document.getElementById("historyContent").value.trim(),
+      subsections: historySubsections.filter(sub => sub.title || sub.content),
       image: document.getElementById("historyImage").value
     };
     saveData(KEYS.HISTORY, historyData);
@@ -839,6 +971,8 @@ label {
       document.getElementById("historyTitle").value = "";
       document.getElementById("historyContent").value = "";
       document.getElementById("historyImage").value = "";
+      historySubsections = [];
+      renderHistorySubsections();
       notify("Sekcia História bola vymazaná");
     }
   });
@@ -847,6 +981,45 @@ label {
   const natureForm = document.getElementById("natureEditForm");
   const natureImageFile = document.getElementById("natureImageFile");
   const natureImageHidden = document.getElementById("natureImage");
+  let natureSubsections = [];
+
+  function renderNatureSubsections() {
+    const container = document.getElementById("natureSubsectionsContainer");
+    if (!container) return;
+    
+    container.innerHTML = natureSubsections.map((subsec, index) => `
+      <div style="border: 1px solid #ddd; padding: 1em; margin-bottom: 0.5em; border-radius: 8px; background: #f0f8ff;">
+        <div style="display: flex; justify-content: space-between; align-items: start; gap: 1em;">
+          <div style="flex: 1;">
+            <label>Nadpis podsekcie</label>
+            <input type="text" value="${subsec.title || ''}" onchange="updateNatureSubsectionTitle(${index}, this.value)" placeholder="Názov podsekcie" style="width: 100%; margin-bottom: 0.5em;">
+            
+            <label>Obsah podsekcie</label>
+            <textarea onchange="updateNatureSubsectionContent(${index}, this.value)" placeholder="Text podsekcie" rows="4" style="width: 100%;">${subsec.content || ''}</textarea>
+          </div>
+          <button type="button" onclick="removeNatureSubsection(${index})" style="background: #dc3545; padding: 0.5em 1em;">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.updateNatureSubsectionTitle = (index, title) => {
+    natureSubsections[index].title = title;
+  };
+
+  window.updateNatureSubsectionContent = (index, content) => {
+    natureSubsections[index].content = content;
+  };
+
+  window.removeNatureSubsection = (index) => {
+    natureSubsections.splice(index, 1);
+    renderNatureSubsections();
+  };
+
+  document.getElementById("addNatureSubsectionBtn").addEventListener("click", () => {
+    natureSubsections.push({ title: '', content: '' });
+    renderNatureSubsections();
+  });
 
   natureImageFile.addEventListener("change", async (e) => {
     const file = e.target.files[0];
@@ -863,8 +1036,11 @@ label {
   natureForm.addEventListener("submit", e => {
     e.preventDefault();
     const natureData = {
+      eyebrow: document.getElementById("natureEyebrow").value.trim(),
       title: document.getElementById("natureTitle").value.trim(),
+      description: document.getElementById("natureDescription").value.trim(),
       content: document.getElementById("natureContent").value.trim(),
+      subsections: natureSubsections.filter(sub => sub.title || sub.content),
       image: document.getElementById("natureImage").value
     };
     saveData(KEYS.NATURE, natureData);
@@ -878,17 +1054,62 @@ label {
       document.getElementById("natureTitle").value = "";
       document.getElementById("natureContent").value = "";
       document.getElementById("natureImage").value = "";
+      natureSubsections = [];
+      renderNatureSubsections();
       notify("Sekcia Príroda bola vymazaná");
     }
   });
 
   // Pravidlá Management
   const rulesForm = document.getElementById("rulesEditForm");
+  let rulesSubsections = [];
+
+  function renderRulesSubsections() {
+    const container = document.getElementById("rulesSubsectionsContainer");
+    if (!container) return;
+    
+    container.innerHTML = rulesSubsections.map((subsec, index) => `
+      <div style="border: 1px solid #ddd; padding: 1em; margin-bottom: 0.5em; border-radius: 8px; background: #f0f8ff;">
+        <div style="display: flex; justify-content: space-between; align-items: start; gap: 1em;">
+          <div style="flex: 1;">
+            <label>Nadpis podsekcie</label>
+            <input type="text" value="${subsec.title || ''}" onchange="updateRulesSubsectionTitle(${index}, this.value)" placeholder="Názov podsekcie" style="width: 100%; margin-bottom: 0.5em;">
+            
+            <label>Obsah podsekcie</label>
+            <textarea onchange="updateRulesSubsectionContent(${index}, this.value)" placeholder="Text podsekcie" rows="4" style="width: 100%;">${subsec.content || ''}</textarea>
+          </div>
+          <button type="button" onclick="removeRulesSubsection(${index})" style="background: #dc3545; padding: 0.5em 1em;">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.updateRulesSubsectionTitle = (index, title) => {
+    rulesSubsections[index].title = title;
+  };
+
+  window.updateRulesSubsectionContent = (index, content) => {
+    rulesSubsections[index].content = content;
+  };
+
+  window.removeRulesSubsection = (index) => {
+    rulesSubsections.splice(index, 1);
+    renderRulesSubsections();
+  };
+
+  document.getElementById("addRulesSubsectionBtn").addEventListener("click", () => {
+    rulesSubsections.push({ title: '', content: '' });
+    renderRulesSubsections();
+  });
+
   rulesForm.addEventListener("submit", e => {
     e.preventDefault();
     const rulesData = {
+      eyebrow: document.getElementById("rulesEyebrow").value.trim(),
       title: document.getElementById("rulesTitle").value.trim(),
-      content: document.getElementById("rulesContent").value.trim()
+      description: document.getElementById("rulesDescription").value.trim(),
+      content: document.getElementById("rulesContent").value.trim(),
+      subsections: rulesSubsections.filter(sub => sub.title || sub.content)
     };
     saveData(KEYS.RULES, rulesData);
     notify("Pravidlá boli uložené");
@@ -900,33 +1121,117 @@ label {
       localStorage.removeItem(KEYS.RULES);
       document.getElementById("rulesTitle").value = "";
       document.getElementById("rulesContent").value = "";
+      rulesSubsections = [];
+      renderRulesSubsections();
       notify("Sekcia Pravidlá bola vymazaná");
     }
   });
 
   // Magické Podbanské Management
   const magicForm = document.getElementById("magicEditForm");
-  const magicImageFile = document.getElementById("magicImageFile");
-  const magicImageHidden = document.getElementById("magicImage");
+  let magicImages = [];
+  let magicSubsections = [];
 
-  magicImageFile.addEventListener("change", async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      notify("Nahrávam obrázok...");
-      const url = await handleImageUpload(file, 'magic');
-      if (url) {
-        magicImageHidden.value = url;
-        notify("Obrázok bol nahraný");
-      }
+  function renderMagicSubsections() {
+    const container = document.getElementById("magicSubsectionsContainer");
+    if (!container) return;
+    
+    container.innerHTML = magicSubsections.map((subsec, index) => `
+      <div style="border: 1px solid #ddd; padding: 1em; margin-bottom: 0.5em; border-radius: 8px; background: #f0f8ff;">
+        <div style="display: flex; justify-content: space-between; align-items: start; gap: 1em;">
+          <div style="flex: 1;">
+            <label>Nadpis podsekcie</label>
+            <input type="text" value="${subsec.title || ''}" onchange="updateMagicSubsectionTitle(${index}, this.value)" placeholder="Názov podsekcie" style="width: 100%; margin-bottom: 0.5em;">
+            
+            <label>Obsah podsekcie</label>
+            <textarea onchange="updateMagicSubsectionContent(${index}, this.value)" placeholder="Text podsekcie" rows="4" style="width: 100%;">${subsec.content || ''}</textarea>
+          </div>
+          <button type="button" onclick="removeMagicSubsection(${index})" style="background: #dc3545; padding: 0.5em 1em;">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.updateMagicSubsectionTitle = (index, title) => {
+    magicSubsections[index].title = title;
+  };
+
+  window.updateMagicSubsectionContent = (index, content) => {
+    magicSubsections[index].content = content;
+  };
+
+  window.removeMagicSubsection = (index) => {
+    magicSubsections.splice(index, 1);
+    renderMagicSubsections();
+  };
+
+  document.getElementById("addMagicSubsectionBtn").addEventListener("click", () => {
+    magicSubsections.push({ title: '', content: '' });
+    renderMagicSubsections();
+  });
+
+  function renderMagicImages() {
+    const container = document.getElementById("magicImagesContainer");
+    if (!container) return;
+    
+    container.innerHTML = magicImages.map((img, index) => `
+      <div style="border: 1px solid #ddd; padding: 1em; margin-bottom: 0.5em; border-radius: 8px; background: #f9f9f9;">
+        <div style="display: flex; gap: 1em; align-items: start;">
+          <div style="flex: 1;">
+            <label>URL obrázka</label>
+            <input type="text" value="${img.url || ''}" onchange="updateMagicImageUrl(${index}, this.value)" style="width: 100%;">
+            
+            <label style="margin-top: 0.5em;">Popis (voliteľný)</label>
+            <input type="text" value="${img.caption || ''}" onchange="updateMagicImageCaption(${index}, this.value)" placeholder="Popis obrázka" style="width: 100%;">
+            
+            <label style="margin-top: 0.5em;">Nahrať súbor</label>
+            <input type="file" accept="image/*" onchange="uploadMagicImage(${index}, this.files[0])" style="width: 100%;">
+          </div>
+          ${img.url ? `<img src="${img.url}" style="width: 100px; height: 100px; object-fit: cover; border-radius: 4px;">` : ''}
+          <button type="button" onclick="removeMagicImage(${index})" style="background: #dc3545; padding: 0.5em 1em;">🗑️</button>
+        </div>
+      </div>
+    `).join('');
+  }
+
+  window.updateMagicImageUrl = (index, url) => {
+    magicImages[index].url = url;
+  };
+
+  window.updateMagicImageCaption = (index, caption) => {
+    magicImages[index].caption = caption;
+  };
+
+  window.removeMagicImage = (index) => {
+    magicImages.splice(index, 1);
+    renderMagicImages();
+  };
+
+  window.uploadMagicImage = async (index, file) => {
+    if (!file) return;
+    notify("Nahrávam obrázok...");
+    const url = await handleImageUpload(file, 'magic');
+    if (url) {
+      magicImages[index].url = url;
+      renderMagicImages();
+      notify("Obrázok bol nahraný");
     }
+  };
+
+  document.getElementById("addMagicImageBtn").addEventListener("click", () => {
+    magicImages.push({ url: '', caption: '' });
+    renderMagicImages();
   });
 
   magicForm.addEventListener("submit", e => {
     e.preventDefault();
     const magicData = {
+      eyebrow: document.getElementById("magicEyebrow").value.trim(),
       title: document.getElementById("magicTitle").value.trim(),
+      description: document.getElementById("magicDescription").value.trim(),
       content: document.getElementById("magicContent").value.trim(),
-      image: document.getElementById("magicImage").value
+      subsections: magicSubsections.filter(sub => sub.title || sub.content), // Only save non-empty subsections
+      images: magicImages.filter(img => img.url) // Only save images with URLs
     };
     saveData(KEYS.MAGIC, magicData);
     notify("Sekcia Magické Podbanské bola uložená");
@@ -938,7 +1243,10 @@ label {
       localStorage.removeItem(KEYS.MAGIC);
       document.getElementById("magicTitle").value = "";
       document.getElementById("magicContent").value = "";
-      document.getElementById("magicImage").value = "";
+      magicImages = [];
+      magicSubsections = [];
+      renderMagicImages();
+      renderMagicSubsections();
       notify("Sekcia Magické Podbanské bola vymazaná");
     }
   });
@@ -963,6 +1271,7 @@ label {
     const heroData = getData(KEYS.HERO, {});
     const aboutData = getData(KEYS.ABOUT, {});
     const contactData = getData(KEYS.CONTACT, {});
+    const activitiesHeaderData = getData(KEYS.ACTIVITIES_HEADER, {});
     const historyData = getData(KEYS.HISTORY, {});
     const natureData = getData(KEYS.NATURE, {});
     const rulesData = getData(KEYS.RULES, {});
@@ -977,31 +1286,56 @@ label {
     document.getElementById("heroBackgroundImage").value = heroData.backgroundImage || "";
 
     // Fill about form (with contact)
+    document.getElementById("aboutEyebrow").value = aboutData.eyebrow || "";
+    document.getElementById("aboutTitle").value = aboutData.title || "";
+    document.getElementById("aboutDescription").value = aboutData.description || "";
     document.getElementById("aboutLeadText").value = aboutData.lead || "";
     document.getElementById("aboutContent").value = aboutData.content || "";
     document.getElementById("aboutImage").value = aboutData.image || "";
     document.getElementById("contactAddress").value = contactData.address || "";
     document.getElementById("contactPhone").value = contactData.phone || "";
     document.getElementById("contactEmail").value = contactData.email || "";
+    
+    // Fill activities header
+    document.getElementById("activitiesEyebrow").value = activitiesHeaderData.eyebrow || "";
+    document.getElementById("activitiesTitle").value = activitiesHeaderData.title || "";
+    document.getElementById("activitiesDescription").value = activitiesHeaderData.description || "";
 
     // Fill history form
+    document.getElementById("historyEyebrow").value = historyData.eyebrow || "";
     document.getElementById("historyTitle").value = historyData.title || "";
+    document.getElementById("historyDescription").value = historyData.description || "";
     document.getElementById("historyContent").value = historyData.content || "";
     document.getElementById("historyImage").value = historyData.image || "";
+    historySubsections = historyData.subsections || [];
+    renderHistorySubsections();
 
     // Fill nature form
+    document.getElementById("natureEyebrow").value = natureData.eyebrow || "";
     document.getElementById("natureTitle").value = natureData.title || "";
+    document.getElementById("natureDescription").value = natureData.description || "";
     document.getElementById("natureContent").value = natureData.content || "";
     document.getElementById("natureImage").value = natureData.image || "";
+    natureSubsections = natureData.subsections || [];
+    renderNatureSubsections();
 
     // Fill rules form
+    document.getElementById("rulesEyebrow").value = rulesData.eyebrow || "";
     document.getElementById("rulesTitle").value = rulesData.title || "";
+    document.getElementById("rulesDescription").value = rulesData.description || "";
     document.getElementById("rulesContent").value = rulesData.content || "";
+    rulesSubsections = rulesData.subsections || [];
+    renderRulesSubsections();
 
     // Fill magic form
+    document.getElementById("magicEyebrow").value = magicData.eyebrow || "";
     document.getElementById("magicTitle").value = magicData.title || "";
+    document.getElementById("magicDescription").value = magicData.description || "";
     document.getElementById("magicContent").value = magicData.content || "";
-    document.getElementById("magicImage").value = magicData.image || "";
+    magicSubsections = magicData.subsections || [];
+    magicImages = magicData.images || [];
+    renderMagicSubsections();
+    renderMagicImages();
 
     // Fill footer form
     document.getElementById("footerText").value = footerText || "";
