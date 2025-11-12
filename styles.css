@@ -113,6 +113,41 @@ body {
   padding: 0 var(--space-6);
 }
 
+/* Mobile: use full-bleed layout on small screens */
+@media (max-width: 640px) {
+  .container,
+  .nav-container {
+    max-width: 100%;
+    width: 100%;
+    margin: 0;
+    padding-left: 0.75rem; /* slight breathing room */
+    padding-right: 0.75rem;
+  }
+
+  /* Make hero and other full width */
+  .hero-content .container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Remove fixed navbar inner max-width so it stretches edge-to-edge */
+  .navbar .nav-container {
+    padding-left: 0.75rem;
+    padding-right: 0.75rem;
+  }
+
+  /* Make about visuals stack and use full width images */
+  .about-layout {
+    display: block;
+  }
+  .about-visual img {
+    width: 100%;
+    height: auto;
+    max-height: none;
+    border-radius: 12px;
+  }
+}
+
 /* Premium Navigation */
 .nav-toggle {
   display: none;
@@ -355,8 +390,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(rgba(58, 47, 42, 0.3), rgba(44, 74, 57, 0.4)),
-              url('https://pplx-res.cloudinary.com/image/upload/v1759527060/pplx_project_search_images/ade80d0f024f1117602f27e526e4caebbee1a518.png') center/cover no-repeat;
+  /* Remove all darkening layers/gradients so the image is clean and visible */
+  background: url('https://pplx-res.cloudinary.com/image/upload/v1759527060/pplx_project_search_images/ade80d0f024f1117602f27e526e4caebbee1a518.png') center/cover no-repeat;
   background-attachment: fixed;
 }
 
@@ -366,8 +401,9 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  /* Removed yellow/gold tone, keeping a subtle dark-green overlay */
-  background: linear-gradient(135deg, rgba(58, 47, 42, 0.45) 0%, rgba(44, 74, 57, 0.45) 100%);
+  /* Disable overlay completely */
+  background: none !important;
+  display: none;
 }
 
 .hero-content {
