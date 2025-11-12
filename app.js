@@ -251,6 +251,25 @@ class ElegantMountainApp {
     renderActivities() {
       const activitiesGrid = document.getElementById("activitiesGrid");
       if (!activitiesGrid) return;
+      
+      // Update section header with custom text
+      try {
+        const headerData = JSON.parse(localStorage.getItem("activitiesHeader") || "{}");
+        const activitiesSection = document.getElementById("activities");
+        if (activitiesSection) {
+          const header = activitiesSection.querySelector(".section-header");
+          if (header) {
+            header.innerHTML = `
+              ${headerData.eyebrow ? `<p class="section-eyebrow">${headerData.eyebrow}</p>` : '<p class="section-eyebrow">Naše aktivity</p>'}
+              <h2 class="section-title">${headerData.title || 'Rozsiahla činnosť pre ochranu a rozvoj'}</h2>
+              ${headerData.description ? `<p class="section-description">${headerData.description}</p>` : '<p class="section-description">Každý z našich projektov predstavuje precizné spojenie odbornosti, miestnej znalosti a dlhodobéj vízie udržateľného rozvoja.</p>'}
+            `;
+          }
+        }
+      } catch (err) {
+        console.error('Error updating activities header:', err);
+      }
+      
       // Load all activities from localStorage
       let activities = [];
       try {
@@ -525,6 +544,20 @@ class ElegantMountainApp {
   }
   
   function applyAboutSection(data) {
+    // Update section header
+    const aboutSection = document.querySelector("#about");
+    if (aboutSection) {
+      const header = aboutSection.querySelector(".section-header");
+      if (header) {
+        const eyebrow = header.querySelector(".section-eyebrow");
+        const title = header.querySelector(".section-title");
+        const description = header.querySelector(".section-description");
+        if (eyebrow) eyebrow.textContent = data.eyebrow || "O NAŠOM ZDRUŽENÍ";
+        if (title) title.textContent = data.title || "Posvätenosť horám a komunite";
+        if (description) description.textContent = data.description || "aa";
+      }
+    }
+    
     const leadEl = document.querySelector(".lead-text");
     if(leadEl) leadEl.textContent = data.lead || '';
     const paragraphs = document.querySelectorAll(".about-narrative p");
@@ -607,11 +640,36 @@ class ElegantMountainApp {
     
     try {
       const historyData = JSON.parse(localStorage.getItem("historySection")) || {};
+      const subsections = historyData.subsections || [];
+      
+      // Update section header
+      const historySection = document.getElementById("history");
+      if (historySection) {
+        const header = historySection.querySelector(".section-header");
+        if (header) {
+          header.innerHTML = `
+            ${historyData.eyebrow ? `<p class="section-eyebrow">${historyData.eyebrow}</p>` : ''}
+            <h2 class="section-title">${historyData.title || ""}</h2>
+            ${historyData.description ? `<p class="section-description">${historyData.description}</p>` : ''}
+          `;
+        }
+      }
+      
       historyContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
-            <h3>${historyData.title || ""}</h3>
             <div class="content-body">${historyData.content || ""}</div>
+            
+            ${subsections.length > 0 ? `
+              <div class="content-subsections">
+                ${subsections.map(sub => `
+                  <div class="subsection-item">
+                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
+                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ""}
           </div>
           ${historyData.image ? `
             <div class="content-image">
@@ -631,11 +689,36 @@ class ElegantMountainApp {
     
     try {
       const natureData = JSON.parse(localStorage.getItem("natureSection")) || {};
+      const subsections = natureData.subsections || [];
+      
+      // Update section header
+      const natureSection = document.getElementById("nature");
+      if (natureSection) {
+        const header = natureSection.querySelector(".section-header");
+        if (header) {
+          header.innerHTML = `
+            ${natureData.eyebrow ? `<p class="section-eyebrow">${natureData.eyebrow}</p>` : ''}
+            <h2 class="section-title">${natureData.title || ""}</h2>
+            ${natureData.description ? `<p class="section-description">${natureData.description}</p>` : ''}
+          `;
+        }
+      }
+      
       natureContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
-            <h3>${natureData.title || ""}</h3>
             <div class="content-body">${natureData.content || ""}</div>
+            
+            ${subsections.length > 0 ? `
+              <div class="content-subsections">
+                ${subsections.map(sub => `
+                  <div class="subsection-item">
+                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
+                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ""}
           </div>
           ${natureData.image ? `
             <div class="content-image">
@@ -655,11 +738,36 @@ class ElegantMountainApp {
     
     try {
       const rulesData = JSON.parse(localStorage.getItem("rulesSection")) || {};
+      const subsections = rulesData.subsections || [];
+      
+      // Update section header
+      const rulesSection = document.getElementById("rules");
+      if (rulesSection) {
+        const header = rulesSection.querySelector(".section-header");
+        if (header) {
+          header.innerHTML = `
+            ${rulesData.eyebrow ? `<p class="section-eyebrow">${rulesData.eyebrow}</p>` : ''}
+            <h2 class="section-title">${rulesData.title || ""}</h2>
+            ${rulesData.description ? `<p class="section-description">${rulesData.description}</p>` : ''}
+          `;
+        }
+      }
+      
       rulesContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
-            <h3>${rulesData.title || ""}</h3>
             <div class="content-body">${rulesData.content || ""}</div>
+            
+            ${subsections.length > 0 ? `
+              <div class="content-subsections">
+                ${subsections.map(sub => `
+                  <div class="subsection-item">
+                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
+                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ""}
           </div>
         </div>
       `;
@@ -674,15 +782,46 @@ class ElegantMountainApp {
     
     try {
       const magicData = JSON.parse(localStorage.getItem("magicSection")) || {};
+      const images = magicData.images || [];
+      const subsections = magicData.subsections || [];
+      
+      // Update section header
+      const magicSection = document.getElementById("magic");
+      if (magicSection) {
+        const header = magicSection.querySelector(".section-header");
+        if (header) {
+          header.innerHTML = `
+            ${magicData.eyebrow ? `<p class="section-eyebrow">${magicData.eyebrow}</p>` : ''}
+            <h2 class="section-title">${magicData.title || ""}</h2>
+            ${magicData.description ? `<p class="section-description">${magicData.description}</p>` : ''}
+          `;
+        }
+      }
+      
       magicContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
-            <h3>${magicData.title || ""}</h3>
             <div class="content-body">${magicData.content || ""}</div>
+            
+            ${subsections.length > 0 ? `
+              <div class="content-subsections">
+                ${subsections.map(sub => `
+                  <div class="subsection-item">
+                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
+                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
+                  </div>
+                `).join('')}
+              </div>
+            ` : ""}
           </div>
-          ${magicData.image ? `
-            <div class="content-image">
-              <img src="${magicData.image}" alt="Magické Podbanské">
+          ${images.length > 0 ? `
+            <div class="magic-images-grid">
+              ${images.map((img, index) => `
+                <div class="magic-image-item">
+                  <img src="${img.url}" alt="${img.caption || 'Magické Podbanské'}">
+                  ${img.caption ? `<p class="image-caption">${img.caption}</p>` : ''}
+                </div>
+              `).join('')}
             </div>
           ` : ""}
         </div>
