@@ -237,6 +237,7 @@ label {
       <button id="logoutBtn">Odhlásiť sa</button>
       <button id="syncToGitHubBtn" style="background-color: #2563eb;">🚀 Publikovať zmeny (GitHub)</button>
       <button id="setupGitHubBtn" style="background-color: #6b7280;">⚙️ Nastavenie GitHub</button>
+      <button id="forceRefreshBtn" style="background-color: #10b981;" title="Vynutí refresh na všetkých otvorených kartách">🔄 Refresh všetky karty</button>
     </div>
 
     <!-- GitHub Setup Modal (hidden by default) -->
@@ -893,11 +894,12 @@ label {
     
     saveData(KEYS.ACTIVITIES, activities);
     // Debug: log and show the current activities array so we can verify save
-    console.log('adminActivities saved ->', activities);
+    console.log('✅ adminActivities saved ->', activities);
+    console.log('📦 localStorage key:', KEYS.ACTIVITIES, '=', localStorage.getItem(KEYS.ACTIVITIES));
     const dbg = document.getElementById('activityDebug');
     if (dbg) {
       dbg.style.display = 'block';
-      dbg.textContent = JSON.stringify(activities, null, 2);
+      dbg.textContent = '🔑 Key: ' + KEYS.ACTIVITIES + '\n\n' + JSON.stringify(activities, null, 2);
     }
     addActivityForm.reset();
     renderActivities();
@@ -1367,6 +1369,19 @@ label {
   }
 
   // ========== GITHUB SYNC FUNCTIONALITY ==========
+  
+  // Force refresh all tabs button
+  document.getElementById("forceRefreshBtn")?.addEventListener("click", () => {
+    // Trigger a dummy localStorage update to force storage event in other tabs
+    const timestamp = Date.now();
+    localStorage.setItem('_refresh_trigger', timestamp.toString());
+    notify("🔄 Refresh signal odoslaný do všetkých kariet!");
+    
+    // Also reload current page after short delay
+    setTimeout(() => {
+      window.location.reload();
+    }, 500);
+  });
   
   // Setup GitHub button
   document.getElementById("setupGitHubBtn").addEventListener("click", () => {
