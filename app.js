@@ -179,6 +179,18 @@ class ElegantMountainApp {
           console.error('Error reloading sections on focus', err);
         }
       });
+      
+      // Auto-refresh from data.json every 30 seconds (for multi-computer sync)
+      setInterval(() => {
+        this.loadDataFromFile().then(() => {
+          console.log('🔄 Auto-refreshed data from data.json');
+          this.renderActivities();
+          renderHistory();
+          renderNature();
+          renderRules();
+          renderMagic();
+        });
+      }, 30000); // 30 seconds
     }
   
     setupNavigation() {
