@@ -393,6 +393,8 @@ label {
         <button type="submit">Pridať/Upraviť aktivitu</button>
       </form>
       <div id="activityList" class="item-list"></div>
+      <!-- Debug: show raw activities JSON for troubleshooting -->
+      <pre id="activityDebug" style="display:none; background:#fff; padding:0.5em; margin-top:0.75rem; border-radius:6px; overflow:auto; max-height:160px; border:1px dashed #ddd;"></pre>
     </div>
 
     <!-- História Management -->
@@ -890,6 +892,13 @@ label {
     }
     
     saveData(KEYS.ACTIVITIES, activities);
+    // Debug: log and show the current activities array so we can verify save
+    console.log('adminActivities saved ->', activities);
+    const dbg = document.getElementById('activityDebug');
+    if (dbg) {
+      dbg.style.display = 'block';
+      dbg.textContent = JSON.stringify(activities, null, 2);
+    }
     addActivityForm.reset();
     renderActivities();
   });
