@@ -290,15 +290,15 @@ body {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-/* Ensure all card content is centered and visually balanced */
-.activity-card-category, .activity-card-title {
-  margin-left: auto;
-  margin-right: auto;
-}
   color: #2d2312;
   text-align: center;
   letter-spacing: 0.01em;
   max-width: 90%;
+}
+/* Ensure all card content is centered and visually balanced */
+.activity-card-category, .activity-card-title {
+  margin-left: auto;
+  margin-right: auto;
 }
 .nav-link {
   text-decoration: none;
@@ -366,12 +366,8 @@ body {
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    135deg,
-    rgba(58, 47, 42, 0.6) 0%,
-    rgba(184, 134, 11, 0.3) 40%,
-    rgba(44, 74, 57, 0.5) 100%
-  );
+  /* Removed yellow/gold tone, keeping a subtle dark-green overlay */
+  background: linear-gradient(135deg, rgba(58, 47, 42, 0.45) 0%, rgba(44, 74, 57, 0.45) 100%);
 }
 
 .hero-content {
@@ -379,6 +375,24 @@ body {
   z-index: 2;
   width: 100%;
   padding-top: 80px;
+}
+
+/* Remove all container padding in hero so text can be positioned from viewport edge */
+.hero-content .container {
+  padding: 0;
+}
+
+/* Position hero text close to left edge on desktop */
+.hero-text {
+  margin-left: 2rem; /* Small gutter from viewport edge */
+  padding-right: var(--space-6); /* Keep some right padding for text flow */
+}
+
+@media (max-width: 900px) {
+  .hero-text {
+    margin-left: var(--space-4); /* Standard mobile padding */
+    padding: 0 var(--space-2);
+  }
 }
 
 .hero-text {
@@ -1169,4 +1183,100 @@ textarea.form-control {
   clip: rect(0, 0, 0, 0);
   white-space: nowrap;
   border: 0;
+}
+
+/* Magic Section - Multi-image Gallery */
+.magic-images-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-8);
+  margin-top: var(--space-8);
+}
+
+.magic-image-item {
+  background: var(--neutral-off-white);
+  border-radius: var(--radius-2xl);
+  overflow: hidden;
+  box-shadow: var(--shadow-md);
+  transition: var(--transition-base);
+}
+
+.magic-image-item:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.magic-image-item img {
+  width: 100%;
+  height: 250px;
+  object-fit: cover;
+  display: block;
+}
+
+.magic-image-item .image-caption {
+  padding: var(--space-4) var(--space-6);
+  color: var(--text-secondary);
+  font-size: 0.95rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.content-layout {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-8);
+}
+
+.content-text h3 {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  color: var(--primary-brown);
+  margin-bottom: var(--space-4);
+}
+
+.content-body {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  margin-bottom: var(--space-6);
+}
+
+/* Subsections styling */
+.content-subsections {
+  margin-top: var(--space-8);
+}
+
+.subsection-item {
+  margin-bottom: var(--space-8);
+  padding: var(--space-6);
+  background: var(--neutral-cream);
+  border-radius: var(--radius-xl);
+  border-left: 4px solid var(--accent-gold);
+}
+
+.subsection-title {
+  font-family: var(--font-display);
+  font-size: 1.35rem;
+  font-weight: 600;
+  color: var(--primary-brown);
+  margin-bottom: var(--space-3);
+}
+
+.subsection-content {
+  color: var(--text-secondary);
+  line-height: 1.7;
+  white-space: pre-line;
+}
+
+@media (max-width: 768px) {
+  .magic-images-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .magic-image-item img {
+    height: 200px;
+  }
+  
+  .subsection-item {
+    padding: var(--space-4);
+  }
 }
