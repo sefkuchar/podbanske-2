@@ -233,6 +233,17 @@ label {
   <!-- DASHBOARD -->
   <section id="adminDashboard" class="hidden">
     <h1>Administrátorský panel</h1>
+    
+    <!-- Sync Status Bar -->
+    <div id="syncStatusBar" style="background: #fef3c7; border: 2px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none;">
+      <strong>⚠️ DÔLEŽITÉ:</strong> Zmeny sa ukladajú LEN na TOMTO počítači! Pre synchronizáciu na iné počítače:
+      <ol style="margin: 0.5rem 0 0 1.5rem;">
+        <li>Klikni na <strong>🚀 Publikovať zmeny (GitHub)</strong></li>
+        <li>Počkaj 1-2 minúty</li>
+        <li>Na druhom počítači sa zmeny automaticky načítajú</li>
+      </ol>
+    </div>
+    
     <div style="display: flex; gap: 1rem; margin-bottom: 15px; flex-wrap: wrap;">
       <button id="logoutBtn">Odhlásiť sa</button>
       <button id="syncToGitHubBtn" style="background-color: #2563eb;">🚀 Publikovať zmeny (GitHub)</button>
@@ -574,6 +585,7 @@ label {
       sessionStorage.setItem("loggedIn", "true");
       showDashboard();
       loadAllDataToForms();
+      showSyncWarning(); // Show warning about localStorage
       loginError.style.display = "none";
     } else {
       loginError.textContent = "Nesprávne prihlasovacie údaje";
@@ -589,6 +601,18 @@ label {
 
   if (checkLogin()) {
     showDashboard();
+  }
+  
+  // Show sync warning after login
+  function showSyncWarning() {
+    const bar = document.getElementById('syncStatusBar');
+    if (bar) {
+      bar.style.display = 'block';
+      // Auto-hide after 10 seconds
+      setTimeout(() => {
+        bar.style.display = 'none';
+      }, 10000);
+    }
   }
 
   // Data Keys
@@ -896,6 +920,19 @@ label {
     // Debug: log and show the current activities array so we can verify save
     console.log('✅ adminActivities saved ->', activities);
     console.log('📦 localStorage key:', KEYS.ACTIVITIES, '=', localStorage.getItem(KEYS.ACTIVITIES));
+    
+    // Show sync reminder
+    const bar = document.getElementById('syncStatusBar');
+    if (bar) {
+      bar.style.display = 'block';
+      bar.style.background = '#dcfce7';
+      bar.style.borderColor = '#16a34a';
+      bar.innerHTML = '<strong>✅ Uložené lokálne!</strong> Pre synchronizáciu na iné počítače klikni na <strong>🚀 Publikovať zmeny (GitHub)</strong>';
+      setTimeout(() => {
+        bar.style.display = 'none';
+      }, 5000);
+    }
+    
     const dbg = document.getElementById('activityDebug');
     if (dbg) {
       dbg.style.display = 'block';
