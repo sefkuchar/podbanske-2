@@ -454,6 +454,14 @@ class ElegantMountainApp {
     setupLocalStorageListener() {
       window.addEventListener("storage", (event) => {
         if (!event.key) return;
+        
+        // Handle force refresh trigger from admin
+        if (event.key === '_refresh_trigger') {
+          console.log('🔄 Refresh triggered from admin panel');
+          window.location.reload();
+          return;
+        }
+        
   try {
           switch (event.key) {
             case "heroSection":
@@ -1222,6 +1230,7 @@ class ElegantMountainApp {
   // Start apps and admin panel on DOM load
   document.addEventListener("DOMContentLoaded", () => {
     new ElegantMountainApp();
-    new ElegantAdminPanel();
+    // DISABLED: old admin panel - now using ADMIN.HTML instead
+    // new ElegantAdminPanel();
   });
   
