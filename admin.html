@@ -234,22 +234,15 @@ label {
   <section id="adminDashboard" class="hidden">
     <h1>Administrátorský panel</h1>
     
-    <!-- Sync Status Bar -->
-    <div id="syncStatusBar" style="background: #fef3c7; border: 2px solid #f59e0b; padding: 1rem; border-radius: 8px; margin-bottom: 1rem; display: none;">
-      <strong>⚠️ DÔLEŽITÉ:</strong> Zmeny sa ukladajú LEN na TOMTO počítači! Pre synchronizáciu na iné počítače:
-      <ol style="margin: 0.5rem 0 0 1.5rem;">
-        <li>Klikni na <strong>🚀 Publikovať zmeny (GitHub)</strong></li>
-        <li>Počkaj 1-2 minúty</li>
-        <li>Na druhom počítači sa zmeny automaticky načítajú</li>
-      </ol>
-    </div>
+
     
     <div style="display: flex; gap: 1rem; margin-bottom: 15px; flex-wrap: wrap;">
       <button id="logoutBtn">Odhlásiť sa</button>
-      <button id="syncToGitHubBtn" style="background-color: #2563eb;">🚀 Publikovať zmeny (GitHub)</button>
       <button id="setupGitHubBtn" style="background-color: #6b7280;">⚙️ Nastavenie GitHub</button>
-      <button id="forceRefreshBtn" style="background-color: #10b981;" title="Vynutí refresh na všetkých otvorených kartách">🔄 Refresh všetky karty</button>
-      <button id="clearLocalBtn" style="background-color: #ef4444;" title="Vyčistí lokálne dáta (ponechá GitHub nastavenie)">🧹 Vyčistiť lokálne dáta</button>
+      <button id="forceRefreshBtn" style="background-color: #10b981;" title="Obnoví stránku so zmenami z GitHub">🔄 Načítať zmeny</button>
+    </div>
+    <div style="background: #dbeafe; border: 2px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
+      <strong>ℹ️ Automatická synchronizácia:</strong> Všetky zmeny sa automaticky ukladajú priamo na GitHub. Po uložení počkajte 1-2 minúty a kliknite "🔄 Načítať zmeny" pre zobrazenie aktualizácií.
     </div>
 
     <!-- GitHub Setup Modal (hidden by default) -->
@@ -352,12 +345,19 @@ label {
         <div class="preview-panel">
           <h3>Náhľad sekcie</h3>
           <div class="about-preview" id="aboutPreview">
+            <div class="preview-header">
+              <p class="preview-eyebrow" style="color: #B8860B; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; margin-bottom: 0.5rem;"></p>
+              <h2 class="preview-title" style="font-family: 'Playfair Display', serif; font-size: 1.5rem; color: #3A2F2A; margin-bottom: 0.5rem;"></h2>
+              <p class="preview-description" style="color: #6B6B6B; font-size: 0.95rem; margin-bottom: 1rem;"></p>
+            </div>
             <div class="preview-image">
               <img src="" alt="Náhľad obrázku">
             </div>
             <div class="preview-content">
-              <div class="preview-lead"></div>
-              <div class="preview-text"></div>
+              <h4 style="margin: 1rem 0 0.5rem 0; color: #3A2F2A;">Hlavný text:</h4>
+              <div class="preview-lead" style="color: #1A1A1A; font-weight: 500; margin-bottom: 1rem; padding: 0.5rem; background: #F8F6F0; border-radius: 4px;"></div>
+              <h4 style="margin: 1rem 0 0.5rem 0; color: #3A2F2A;">Obsah:</h4>
+              <div class="preview-text" style="color: #6B6B6B; padding: 0.5rem; background: #FDFDFC; border-radius: 4px;"></div>
             </div>
           </div>
           <div class="contact-preview" id="contactPreview">
@@ -586,7 +586,6 @@ label {
       sessionStorage.setItem("loggedIn", "true");
       showDashboard();
       loadAllDataToForms();
-      showSyncWarning(); // Show warning about localStorage
       loginError.style.display = "none";
     } else {
       loginError.textContent = "Nesprávne prihlasovacie údaje";
@@ -604,17 +603,7 @@ label {
     showDashboard();
   }
   
-  // Show sync warning after login
-  function showSyncWarning() {
-    const bar = document.getElementById('syncStatusBar');
-    if (bar) {
-      bar.style.display = 'block';
-      // Auto-hide after 10 seconds
-      setTimeout(() => {
-        bar.style.display = 'none';
-      }, 10000);
-    }
-  }
+
 
   // Data Keys
   const KEYS = {
@@ -642,30 +631,22 @@ label {
     }
   }
   
-  // Save data to localStorage (safe with quota handling)
-  function saveData(key, data) {
+  // Save data directly to GitHub (no localStorage)
+  async function saveData(key, data) {
+    // Show immediate feedback
+    notify('💾 Ukladám na GitHub...');
+    
+    // Sync to GitHub immediately
     try {
-      localStorage.setItem(key, JSON.stringify(data));
+      await window.githubSync.syncToGitHub(notify);
+      notify('✅ Uložené na GitHub!');
     } catch (err) {
-      if (err && (err.name === 'QuotaExceededError' || String(err).includes('QuotaExceededError'))) {
-        console.error('LocalStorage quota exceeded when saving', key, err);
-        notify('❌ Miestne úložisko je plné. Zmeny neboli uložené.');
-        showStorageHelp();
-      } else {
-        console.error('Failed to save data', key, err);
-        notify('❌ Chyba pri ukladaní dát');
-      }
+      console.error('Failed to save to GitHub', key, err);
+      notify('❌ Chyba pri ukladaní na GitHub');
     }
   }
 
-  function showStorageHelp() {
-    const bar = document.getElementById('syncStatusBar');
-    if (!bar) return;
-    bar.style.display = 'block';
-    bar.style.background = '#fee2e2';
-    bar.style.borderColor = '#ef4444';
-    bar.innerHTML = '<strong>❌ Úložisko je plné.</strong> Obrázky sú pravdepodobne príliš veľké. Riešenie: 1) klikni <em>🧹 Vyčistiť lokálne dáta</em>, 2) nahrávaj menšie obrázky, 3) nastav GitHub/Firebase pre ukladanie URL namiesto veľkých súborov.';
-  }
+
 
   // Image Upload Helper
   async function handleImageUpload(file, section) {
@@ -787,8 +768,7 @@ label {
       description: document.getElementById("heroDescription").value.trim(),
       backgroundImage: heroImageHidden.value
     };
-    saveData(KEYS.HERO, heroData);
-    notify("Úvodná sekcia bola uložená");
+    await saveData(KEYS.HERO, heroData);
   });
 
   // About Section Management
@@ -798,6 +778,9 @@ label {
 
   // About section preview update function
   function updateAboutPreview() {
+    const eyebrowText = document.getElementById("aboutEyebrow").value;
+    const titleText = document.getElementById("aboutTitle").value;
+    const descriptionText = document.getElementById("aboutDescription").value;
     const leadText = document.getElementById("aboutLeadText").value;
     const contentText = document.getElementById("aboutContent").value;
     const address = document.getElementById("contactAddress").value;
@@ -806,6 +789,9 @@ label {
     
     // Update about preview
     const aboutPreview = document.getElementById("aboutPreview");
+    aboutPreview.querySelector(".preview-eyebrow").textContent = eyebrowText;
+    aboutPreview.querySelector(".preview-title").textContent = titleText;
+    aboutPreview.querySelector(".preview-description").textContent = descriptionText;
     aboutPreview.querySelector(".preview-lead").textContent = leadText;
     aboutPreview.querySelector(".preview-text").textContent = contentText;
     
@@ -835,7 +821,7 @@ label {
   }
 
   // Update preview on input changes
-  ["aboutLeadText", "aboutContent", "contactAddress", "contactPhone", "contactEmail"].forEach(id => {
+  ["aboutEyebrow", "aboutTitle", "aboutDescription", "aboutLeadText", "aboutContent", "contactAddress", "contactPhone", "contactEmail"].forEach(id => {
     document.getElementById(id).addEventListener("input", updateAboutPreview);
   });
 
@@ -852,7 +838,7 @@ label {
     }
   });
 
-  aboutForm.addEventListener("submit", e => {
+  aboutForm.addEventListener("submit", async e => {
     e.preventDefault();
     const aboutData = {
       eyebrow: document.getElementById("aboutEyebrow").value.trim(),
@@ -862,16 +848,13 @@ label {
       content: document.getElementById("aboutContent").value.trim(),
       image: document.getElementById("aboutImage").value
     };
-    saveData(KEYS.ABOUT, aboutData);
-
     const contactData = {
       address: document.getElementById("contactAddress").value.trim(),
       phone: document.getElementById("contactPhone").value.trim(),
       email: document.getElementById("contactEmail").value.trim()
     };
-    saveData(KEYS.CONTACT, contactData);
-    
-    notify("Sekcia O nás bola uložená");
+    // Save both sections to GitHub in one call
+    await window.githubSync.syncSectionsToGitHub([KEYS.ABOUT, KEYS.CONTACT], [aboutData, contactData], notify);
   });
 
   // Activities Management
@@ -937,17 +920,16 @@ label {
   }
 
   // Activities header management
-  document.getElementById("saveActivitiesHeaderBtn").addEventListener("click", () => {
+  document.getElementById("saveActivitiesHeaderBtn").addEventListener("click", async () => {
     const headerData = {
       eyebrow: document.getElementById("activitiesEyebrow").value.trim(),
       title: document.getElementById("activitiesTitle").value.trim(),
       description: document.getElementById("activitiesDescription").value.trim()
     };
-    localStorage.setItem(KEYS.ACTIVITIES_HEADER, JSON.stringify(headerData));
-    notify("Nadpisy sekcie Aktivity boli uložené");
+    await saveData(KEYS.ACTIVITIES_HEADER, headerData);
   });
 
-  addActivityForm.addEventListener("submit", e => {
+  addActivityForm.addEventListener("submit", async e => {
     e.preventDefault();
     const activity = {
       title: document.getElementById("activityTitle").value.trim(),
@@ -958,35 +940,12 @@ label {
     
     if (editActivityIndex >= 0) {
       activities[editActivityIndex] = activity;
-      notify("Aktivita bola upravená");
       editActivityIndex = -1;
     } else {
       activities.push(activity);
-      notify("Aktivita bola pridaná");
     }
     
-    saveData(KEYS.ACTIVITIES, activities);
-    // Debug: log and show the current activities array so we can verify save
-    console.log('✅ adminActivities saved ->', activities);
-    console.log('📦 localStorage key:', KEYS.ACTIVITIES, '=', localStorage.getItem(KEYS.ACTIVITIES));
-    
-    // Show sync reminder
-    const bar = document.getElementById('syncStatusBar');
-    if (bar) {
-      bar.style.display = 'block';
-      bar.style.background = '#dcfce7';
-      bar.style.borderColor = '#16a34a';
-      bar.innerHTML = '<strong>✅ Uložené lokálne!</strong> Pre synchronizáciu na iné počítače klikni na <strong>🚀 Publikovať zmeny (GitHub)</strong>';
-      setTimeout(() => {
-        bar.style.display = 'none';
-      }, 5000);
-    }
-    
-    const dbg = document.getElementById('activityDebug');
-    if (dbg) {
-      dbg.style.display = 'block';
-      dbg.textContent = '🔑 Key: ' + KEYS.ACTIVITIES + '\n\n' + JSON.stringify(activities, null, 2);
-    }
+    await saveData(KEYS.ACTIVITIES, activities);
     addActivityForm.reset();
     renderActivities();
   });
@@ -1047,7 +1006,7 @@ label {
     }
   });
 
-  historyForm.addEventListener("submit", e => {
+  historyForm.addEventListener("submit", async e => {
     e.preventDefault();
     const historyData = {
       eyebrow: document.getElementById("historyEyebrow").value.trim(),
@@ -1057,8 +1016,7 @@ label {
       subsections: historySubsections.filter(sub => sub.title || sub.content),
       image: document.getElementById("historyImage").value
     };
-    saveData(KEYS.HISTORY, historyData);
-    notify("História bola uložená");
+    await saveData(KEYS.HISTORY, historyData);
   });
 
   // Delete History button
@@ -1130,7 +1088,7 @@ label {
     }
   });
 
-  natureForm.addEventListener("submit", e => {
+  natureForm.addEventListener("submit", async e => {
     e.preventDefault();
     const natureData = {
       eyebrow: document.getElementById("natureEyebrow").value.trim(),
@@ -1140,8 +1098,7 @@ label {
       subsections: natureSubsections.filter(sub => sub.title || sub.content),
       image: document.getElementById("natureImage").value
     };
-    saveData(KEYS.NATURE, natureData);
-    notify("Sekcia Príroda bola uložená");
+    await saveData(KEYS.NATURE, natureData);
   });
 
   // Delete Nature button
@@ -1199,7 +1156,7 @@ label {
     renderRulesSubsections();
   });
 
-  rulesForm.addEventListener("submit", e => {
+  rulesForm.addEventListener("submit", async e => {
     e.preventDefault();
     const rulesData = {
       eyebrow: document.getElementById("rulesEyebrow").value.trim(),
@@ -1208,8 +1165,7 @@ label {
       content: document.getElementById("rulesContent").value.trim(),
       subsections: rulesSubsections.filter(sub => sub.title || sub.content)
     };
-    saveData(KEYS.RULES, rulesData);
-    notify("Pravidlá boli uložené");
+    await saveData(KEYS.RULES, rulesData);
   });
 
   // Delete Rules button
@@ -1320,18 +1276,17 @@ label {
     renderMagicImages();
   });
 
-  magicForm.addEventListener("submit", e => {
+  magicForm.addEventListener("submit", async e => {
     e.preventDefault();
     const magicData = {
       eyebrow: document.getElementById("magicEyebrow").value.trim(),
       title: document.getElementById("magicTitle").value.trim(),
       description: document.getElementById("magicDescription").value.trim(),
       content: document.getElementById("magicContent").value.trim(),
-      subsections: magicSubsections.filter(sub => sub.title || sub.content), // Only save non-empty subsections
-      images: magicImages.filter(img => img.url) // Only save images with URLs
+      subsections: magicSubsections.filter(sub => sub.title || sub.content),
+      images: magicImages.filter(img => img.url)
     };
-    saveData(KEYS.MAGIC, magicData);
-    notify("Sekcia Magické Podbanské bola uložená");
+    await saveData(KEYS.MAGIC, magicData);
   });
 
   // Delete Magic button
@@ -1350,11 +1305,10 @@ label {
 
   // Footer Management
   const footerForm = document.getElementById("footerEditForm");
-  footerForm.addEventListener("submit", e => {
+  footerForm.addEventListener("submit", async e => {
     e.preventDefault();
     const text = document.getElementById("footerText").value.trim();
-    localStorage.setItem(KEYS.FOOTER, text);
-    notify("Text pätičky bol uložený");
+    await saveData(KEYS.FOOTER, text);
   });
 
   // Load all data to forms
@@ -1456,17 +1410,10 @@ label {
 
   // ========== GITHUB SYNC FUNCTIONALITY ==========
   
-  // Force refresh all tabs button
+  // Reload data from GitHub button
   document.getElementById("forceRefreshBtn")?.addEventListener("click", () => {
-    // Trigger a dummy localStorage update to force storage event in other tabs
-    const timestamp = Date.now();
-    localStorage.setItem('_refresh_trigger', timestamp.toString());
-    notify("🔄 Refresh signal odoslaný do všetkých kariet!");
-    
-    // Also reload current page after short delay
-    setTimeout(() => {
-      window.location.reload();
-    }, 500);
+    notify("🔄 Načítavam zmeny z GitHub...");
+    window.location.reload();
   });
   
   // Setup GitHub button
@@ -1501,38 +1448,7 @@ label {
     notify("✅ GitHub nastavenie uložené!");
   };
 
-  // Sync to GitHub button
-  document.getElementById("syncToGitHubBtn").addEventListener("click", async () => {
-    if (!window.githubSync.isConfigured()) {
-      alert("Najprv nastavte GitHub sync! Kliknite na '⚙️ Nastavenie GitHub'");
-      document.getElementById("githubSetupModal").classList.remove("hidden");
-      return;
-    }
-    
-    const confirmed = confirm("Publikovať všetky zmeny na GitHub?\n\nToto nahrá obsah na GitHub a Vercel automaticky nasadí zmeny.");
-    if (!confirmed) return;
-    
-    try {
-      await window.githubSync.syncToGitHub(notify);
-    } catch (error) {
-      notify("❌ Chyba: " + error.message);
-      console.error(error);
-    }
-  });
 
-  // Clear Local Data button
-  document.getElementById('clearLocalBtn')?.addEventListener('click', () => {
-    if (!confirm('Vyčistiť všetky lokálne uložené dáta (ponechá GitHub nastavenie)?')) return;
-    const preserve = new Set(['github-token','github-repo']);
-    const keysToRemove = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!preserve.has(k)) keysToRemove.push(k);
-    }
-    keysToRemove.forEach(k => localStorage.removeItem(k));
-    notify('🧹 Lokálne dáta boli vyčistené');
-    try { loadAllDataToForms(); } catch(e) {}
-  });
 
 })();
 </script>
