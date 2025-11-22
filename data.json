@@ -14,5 +14,13 @@
   "rules": {},
   "magic": {},
   "contact": {},
-  "footer": ""
+  "footer": "",
+  "history": {
+    "eyebrow": "Historia",
+    "title": "historia",
+    "description": "historia 123",
+    "content": "historia 12345",
+    "subsections": [],
+    "image": ""
+  }
 }
