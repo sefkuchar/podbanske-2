@@ -631,18 +631,47 @@ label {
     }
   }
   
-  // Save data directly to GitHub (no localStorage)
-  async function saveData(key, data) {
-    // Show immediate feedback
-    notify('💾 Ukladám na GitHub...');
-    
-    // Sync to GitHub immediately
+  // ================= GitHub-only persistence =================
+  function keyMapToFileField(k) {
+    switch (k) {
+      case KEYS.HERO: return 'hero';
+      case KEYS.ABOUT: return 'about';
+      case KEYS.ACTIVITIES: return 'activities';
+      case KEYS.ACTIVITIES_HEADER: return 'activitiesHeader';
+      case KEYS.HISTORY: return 'history';
+      case KEYS.NATURE: return 'nature';
+      case KEYS.RULES: return 'rules';
+      case KEYS.MAGIC: return 'magic';
+      case KEYS.CONTACT: return 'contact';
+      case KEYS.FOOTER: return 'footer';
+      default: return k;
+    }
+  }
+
+  async function fetchRemoteDataJson() {
     try {
-      await window.githubSync.syncToGitHub(notify);
-      notify('✅ Uložené na GitHub!');
+      const file = await window.githubSync.getFile('data.json');
+      if (!file || !file.content) {
+        return { hero:{}, about:{}, activities:[], activitiesHeader:{}, history:{}, nature:{}, rules:{}, magic:{}, contact:{}, footer:'' };
+      }
+      const decoded = decodeURIComponent(escape(atob(file.content)));
+      return JSON.parse(decoded);
+    } catch (e) {
+      console.warn('Fetch remote data.json failed', e);
+      return { hero:{}, about:{}, activities:[], activitiesHeader:{}, history:{}, nature:{}, rules:{}, magic:{}, contact:{}, footer:'' };
+    }
+  }
+
+  async function saveData(key, value) {
+    notify('🔄 Ukladám na GitHub…');
+    const data = await fetchRemoteDataJson();
+    data[keyMapToFileField(key)] = value;
+    try {
+      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), `Update ${keyMapToFileField(key)} - ${new Date().toISOString()}`);
+      notify('✅ Uložené na GitHub');
     } catch (err) {
-      console.error('Failed to save to GitHub', key, err);
-      notify('❌ Chyba pri ukladaní na GitHub');
+      console.error('GitHub update failed', err);
+      notify('❌ Chyba pri ukladaní: ' + err.message);
     }
   }
 
@@ -853,8 +882,17 @@ label {
       phone: document.getElementById("contactPhone").value.trim(),
       email: document.getElementById("contactEmail").value.trim()
     };
-    // Save both sections to GitHub in one call
-    await window.githubSync.syncSectionsToGitHub([KEYS.ABOUT, KEYS.CONTACT], [aboutData, contactData], notify);
+    notify('🔄 Ukladám O nás + kontakt na GitHub…');
+    const data = await fetchRemoteDataJson();
+    data.about = aboutData;
+    data.contact = contactData;
+    try {
+      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), `Update about+contact - ${new Date().toISOString()}`);
+      notify('✅ O nás + kontakt uložené na GitHub');
+    } catch (err) {
+      console.error('Save about/contact failed', err);
+      notify('❌ Chyba pri ukladaní: ' + err.message);
+    }
   });
 
   // Activities Management
@@ -862,7 +900,7 @@ label {
   const activityList = document.getElementById("activityList");
   const activityImageFile = document.getElementById("activityImageFile");
   const activityImageHidden = document.getElementById("activityImage");
-  let activities = getData(KEYS.ACTIVITIES, []);
+  let activities = [];
 
   activityImageFile.addEventListener("change", async (e) => {
     const file = e.target.files[0];
@@ -878,7 +916,6 @@ label {
   let editActivityIndex = -1;
 
   function renderActivities() {
-    activities = getData(KEYS.ACTIVITIES, []);
     if (!activities.length) {
       activityList.innerHTML = '<p style="text-align:center;color:#666;">Zatiaľ neboli pridané žiadne aktivity</p>';
       return;
@@ -1020,9 +1057,11 @@ label {
   });
 
   // Delete History button
-  document.getElementById("deleteHistoryBtn").addEventListener("click", () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu História? Táto akcia sa nedá vrátiť späť.")) {
-      localStorage.removeItem(KEYS.HISTORY);
+  document.getElementById("deleteHistoryBtn").addEventListener("click", async () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu História?")) {
+      const data = await fetchRemoteDataJson();
+      delete data.history;
+      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete history section');
       document.getElementById("historyTitle").value = "";
       document.getElementById("historyContent").value = "";
       document.getElementById("historyImage").value = "";
@@ -1102,9 +1141,11 @@ label {
   });
 
   // Delete Nature button
-  document.getElementById("deleteNatureBtn").addEventListener("click", () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu Príroda? Táto akcia sa nedá vrátiť späť.")) {
-      localStorage.removeItem(KEYS.NATURE);
+  document.getElementById("deleteNatureBtn").addEventListener("click", async () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu Príroda?")) {
+      const data = await fetchRemoteDataJson();
+      delete data.nature;
+      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete nature section');
       document.getElementById("natureTitle").value = "";
       document.getElementById("natureContent").value = "";
       document.getElementById("natureImage").value = "";
@@ -1169,9 +1210,11 @@ label {
   });
 
   // Delete Rules button
-  document.getElementById("deleteRulesBtn").addEventListener("click", () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu Pravidlá? Táto akcia sa nedá vrátiť späť.")) {
-      localStorage.removeItem(KEYS.RULES);
+  document.getElementById("deleteRulesBtn").addEventListener("click", async () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu Pravidlá?")) {
+      const data = await fetchRemoteDataJson();
+      delete data.rules;
+      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete rules section');
       document.getElementById("rulesTitle").value = "";
       document.getElementById("rulesContent").value = "";
       rulesSubsections = [];
@@ -1290,9 +1333,11 @@ label {
   });
 
   // Delete Magic button
-  document.getElementById("deleteMagicBtn").addEventListener("click", () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu Magické Podbanské? Táto akcia sa nedá vrátiť späť.")) {
-      localStorage.removeItem(KEYS.MAGIC);
+  document.getElementById("deleteMagicBtn").addEventListener("click", async () => {
+    if (confirm("Naozaj chcete vymazať celú sekciu Magické Podbanské?")) {
+      const data = await fetchRemoteDataJson();
+      delete data.magic;
+      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete magic section');
       document.getElementById("magicTitle").value = "";
       document.getElementById("magicContent").value = "";
       magicImages = [];
@@ -1319,80 +1364,83 @@ label {
   }
 
   function loadAllDataToForms() {
-    const heroData = getData(KEYS.HERO, {});
-    const aboutData = getData(KEYS.ABOUT, {});
-    const contactData = getData(KEYS.CONTACT, {});
-    const activitiesHeaderData = getData(KEYS.ACTIVITIES_HEADER, {});
-    const historyData = getData(KEYS.HISTORY, {});
-    const natureData = getData(KEYS.NATURE, {});
-    const rulesData = getData(KEYS.RULES, {});
-    const magicData = getData(KEYS.MAGIC, {});
-    const footerText = localStorage.getItem(KEYS.FOOTER);
+    fetchRemoteDataJson().then(remote => {
+      const heroData = remote.hero || {};
+      const aboutData = remote.about || {};
+      const contactData = remote.contact || {};
+      const activitiesHeaderData = remote.activitiesHeader || {};
+      const historyData = remote.history || {};
+      const natureData = remote.nature || {};
+      const rulesData = remote.rules || {};
+      const magicData = remote.magic || {};
+      const footerText = remote.footer || '';
 
-    // Fill hero form
-    document.getElementById("heroEyebrow").value = heroData.eyebrow || "";
-    document.getElementById("heroMainHeadline").value = heroData.mainHeadline || "";
-    document.getElementById("heroSubHeadline").value = heroData.subHeadline || "";
-    document.getElementById("heroDescription").value = heroData.description || "";
-    document.getElementById("heroBackgroundImage").value = heroData.backgroundImage || "";
+      // Fill hero form
+      document.getElementById("heroEyebrow").value = heroData.eyebrow || "";
+      document.getElementById("heroMainHeadline").value = heroData.mainHeadline || "";
+      document.getElementById("heroSubHeadline").value = heroData.subHeadline || "";
+      document.getElementById("heroDescription").value = heroData.description || "";
+      document.getElementById("heroBackgroundImage").value = heroData.backgroundImage || "";
 
-    // Fill about form (with contact)
-    document.getElementById("aboutEyebrow").value = aboutData.eyebrow || "";
-    document.getElementById("aboutTitle").value = aboutData.title || "";
-    document.getElementById("aboutDescription").value = aboutData.description || "";
-    document.getElementById("aboutLeadText").value = aboutData.lead || "";
-    document.getElementById("aboutContent").value = aboutData.content || "";
-    document.getElementById("aboutImage").value = aboutData.image || "";
-    document.getElementById("contactAddress").value = contactData.address || "";
-    document.getElementById("contactPhone").value = contactData.phone || "";
-    document.getElementById("contactEmail").value = contactData.email || "";
+      // Fill about form (with contact)
+      document.getElementById("aboutEyebrow").value = aboutData.eyebrow || "";
+      document.getElementById("aboutTitle").value = aboutData.title || "";
+      document.getElementById("aboutDescription").value = aboutData.description || "";
+      document.getElementById("aboutLeadText").value = aboutData.lead || "";
+      document.getElementById("aboutContent").value = aboutData.content || "";
+      document.getElementById("aboutImage").value = aboutData.image || "";
+      document.getElementById("contactAddress").value = contactData.address || "";
+      document.getElementById("contactPhone").value = contactData.phone || "";
+      document.getElementById("contactEmail").value = contactData.email || "";
     
-    // Fill activities header
-    document.getElementById("activitiesEyebrow").value = activitiesHeaderData.eyebrow || "";
-    document.getElementById("activitiesTitle").value = activitiesHeaderData.title || "";
-    document.getElementById("activitiesDescription").value = activitiesHeaderData.description || "";
+      // Fill activities header
+      document.getElementById("activitiesEyebrow").value = activitiesHeaderData.eyebrow || "";
+      document.getElementById("activitiesTitle").value = activitiesHeaderData.title || "";
+      document.getElementById("activitiesDescription").value = activitiesHeaderData.description || "";
 
-    // Fill history form
-    document.getElementById("historyEyebrow").value = historyData.eyebrow || "";
-    document.getElementById("historyTitle").value = historyData.title || "";
-    document.getElementById("historyDescription").value = historyData.description || "";
-    document.getElementById("historyContent").value = historyData.content || "";
-    document.getElementById("historyImage").value = historyData.image || "";
-    historySubsections = historyData.subsections || [];
-    renderHistorySubsections();
+      // Fill history form
+      document.getElementById("historyEyebrow").value = historyData.eyebrow || "";
+      document.getElementById("historyTitle").value = historyData.title || "";
+      document.getElementById("historyDescription").value = historyData.description || "";
+      document.getElementById("historyContent").value = historyData.content || "";
+      document.getElementById("historyImage").value = historyData.image || "";
+      historySubsections = historyData.subsections || [];
+      renderHistorySubsections();
 
-    // Fill nature form
-    document.getElementById("natureEyebrow").value = natureData.eyebrow || "";
-    document.getElementById("natureTitle").value = natureData.title || "";
-    document.getElementById("natureDescription").value = natureData.description || "";
-    document.getElementById("natureContent").value = natureData.content || "";
-    document.getElementById("natureImage").value = natureData.image || "";
-    natureSubsections = natureData.subsections || [];
-    renderNatureSubsections();
+      // Fill nature form
+      document.getElementById("natureEyebrow").value = natureData.eyebrow || "";
+      document.getElementById("natureTitle").value = natureData.title || "";
+      document.getElementById("natureDescription").value = natureData.description || "";
+      document.getElementById("natureContent").value = natureData.content || "";
+      document.getElementById("natureImage").value = natureData.image || "";
+      natureSubsections = natureData.subsections || [];
+      renderNatureSubsections();
 
-    // Fill rules form
-    document.getElementById("rulesEyebrow").value = rulesData.eyebrow || "";
-    document.getElementById("rulesTitle").value = rulesData.title || "";
-    document.getElementById("rulesDescription").value = rulesData.description || "";
-    document.getElementById("rulesContent").value = rulesData.content || "";
-    rulesSubsections = rulesData.subsections || [];
-    renderRulesSubsections();
+      // Fill rules form
+      document.getElementById("rulesEyebrow").value = rulesData.eyebrow || "";
+      document.getElementById("rulesTitle").value = rulesData.title || "";
+      document.getElementById("rulesDescription").value = rulesData.description || "";
+      document.getElementById("rulesContent").value = rulesData.content || "";
+      rulesSubsections = rulesData.subsections || [];
+      renderRulesSubsections();
 
-    // Fill magic form
-    document.getElementById("magicEyebrow").value = magicData.eyebrow || "";
-    document.getElementById("magicTitle").value = magicData.title || "";
-    document.getElementById("magicDescription").value = magicData.description || "";
-    document.getElementById("magicContent").value = magicData.content || "";
-    magicSubsections = magicData.subsections || [];
-    magicImages = magicData.images || [];
-    renderMagicSubsections();
-    renderMagicImages();
+      // Fill magic form
+      document.getElementById("magicEyebrow").value = magicData.eyebrow || "";
+      document.getElementById("magicTitle").value = magicData.title || "";
+      document.getElementById("magicDescription").value = magicData.description || "";
+      document.getElementById("magicContent").value = magicData.content || "";
+      magicSubsections = magicData.subsections || [];
+      magicImages = magicData.images || [];
+      renderMagicSubsections();
+      renderMagicImages();
 
-    // Fill footer form
-    document.getElementById("footerText").value = footerText || "";
+      // Fill footer form
+      document.getElementById("footerText").value = footerText || "";
 
-    // Render lists
-    renderActivities();
+      // Render lists
+      activities = remote.activities || [];
+      renderActivities();
+    });
   }
 
   // Clear all forms
