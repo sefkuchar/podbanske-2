@@ -116,7 +116,9 @@ class ElegantMountainApp {
     // Load data from data.json file
     async loadDataFromFile() {
       try {
-        const response = await fetch('/data.json?t=' + Date.now()); // Cache bust
+        const response = await fetch('https://sefkuchar.github.io/podbanske-2/data.json?t=' + Date.now());
+
+ // Cache bust
         if (response.ok) {
           const data = await response.json();
           console.log('✅ Loaded data from data.json');
@@ -1246,3 +1248,4 @@ class ElegantMountainApp {
     // new ElegantAdminPanel();
   });
   
+
