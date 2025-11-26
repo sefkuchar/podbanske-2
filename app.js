@@ -1,1189 +1,787 @@
-// ---------------------------------
-// Main website app rendering and synchronization
-// ---------------------------------
-class ElegantMountainApp {
-    constructor() {
-      // Ensure we always have a data object
-      this.data = {};
-      // Always load remote data first; do not seed localStorage with defaults
-      this.start();
-    }
+// =============================================================================
+// GITHUB-ONLY DATA SYNC - No localStorage for content data
+// =============================================================================
 
-    // Ensure remote data is loaded before initializing the app
-    async start() {
-      try {
-        await this.loadDataFromFile();
-      } catch (err) {
-        console.error('Error loading remote data in start():', err);
-        this.data = this.data || {};
+const GITHUB_CONFIG = {
+  owner: 'sefkuchar',
+  repo: 'podbanske-2',
+  branch: 'main',
+  dataFile: 'data.json'
+};
+
+// Build URLs for fetching/pushing
+function getGitHubRawUrl() {
+  return `https://raw.githubusercontent.com/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/${GITHUB_CONFIG.branch}/${GITHUB_CONFIG.dataFile}?t=${Date.now()}`;
+}
+
+function getGitHubApiUrl() {
+  return `https://api.github.com/repos/${GITHUB_CONFIG.owner}/${GITHUB_CONFIG.repo}/contents/${GITHUB_CONFIG.dataFile}`;
+}
+
+// =============================================================================
+// GLOBAL DATA STORE - single source of truth
+// =============================================================================
+let siteData = {
+  hero: {},
+  about: {},
+  activities: [],
+  history: {},
+  nature: {},
+  rules: {},
+  magic: {},
+  contact: {},
+  footer: ''
+};
+
+// =============================================================================
+// FETCH DATA FROM GITHUB
+// =============================================================================
+async function fetchDataFromGitHub() {
+  const url = getGitHubRawUrl();
+  console.log('🔎 Fetching data from GitHub:', url);
+  
+  try {
+    const response = await fetch(url, { cache: 'no-store' });
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+    }
+    const data = await response.json();
+    console.log('✅ Loaded data from GitHub:', data);
+    
+    // Merge with defaults
+    siteData = {
+      hero: data.hero || {},
+      about: data.about || {},
+      activities: data.activities || [],
+      history: data.history || {},
+      nature: data.nature || {},
+      rules: data.rules || {},
+      magic: data.magic || {},
+      contact: data.contact || {},
+      footer: data.footer || ''
+    };
+    
+    return siteData;
+  } catch (err) {
+    console.error('❌ Failed to fetch from GitHub:', err);
+    return siteData;
+  }
+}
+
+// =============================================================================
+// SAVE DATA TO GITHUB (for admin)
+// =============================================================================
+async function saveDataToGitHub(newData) {
+  const token = localStorage.getItem('github-token');
+  if (!token) {
+    alert('GitHub token nie je nastavený! Choď do Nastavenia a zadaj token.');
+    return false;
+  }
+
+  try {
+    // First get current file to get SHA
+    const apiUrl = getGitHubApiUrl();
+    console.log('📤 Saving to GitHub:', apiUrl);
+    
+    const getResponse = await fetch(apiUrl, {
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json'
       }
-      this.init();
+    });
+    
+    let sha = null;
+    if (getResponse.ok) {
+      const fileInfo = await getResponse.json();
+      sha = fileInfo.sha;
     }
-
-    // Load data from data.json file
-    async loadDataFromFile() {
-      try {
-        const url = 'https://sefkuchar.github.io/podbanske-2/data.json?t=' + Date.now();
-        console.log('🔎 Fetching remote data from', url);
-        const response = await fetch(url);
-
-        // Cache bust
-        if (response.ok) {
-          const data = await response.json();
-          console.log('✅ Loaded data from data.json', data);
-          // make fetched data available to other methods
-          this.data = data || {};
-
-          // Save to localStorage so existing code works (only when present)
-          if (data.hero && Object.keys(data.hero).length) {
-            localStorage.setItem('heroSection', JSON.stringify(data.hero));
-          }
-          if (data.about && Object.keys(data.about).length) {
-            localStorage.setItem('aboutSection', JSON.stringify(data.about));
-          }
-          if (data.activities && data.activities.length) {
-            localStorage.setItem('adminActivities', JSON.stringify(data.activities));
-          }
-          if (data.history && Object.keys(data.history).length) {
-            localStorage.setItem('historySection', JSON.stringify(data.history));
-          }
-          if (data.nature && Object.keys(data.nature).length) {
-            localStorage.setItem('natureSection', JSON.stringify(data.nature));
-          }
-          if (data.rules && Object.keys(data.rules).length) {
-            localStorage.setItem('rulesSection', JSON.stringify(data.rules));
-          }
-          if (data.magic && Object.keys(data.magic).length) {
-            localStorage.setItem('magicSection', JSON.stringify(data.magic));
-          }
-          if (data.contact && Object.keys(data.contact).length) {
-            localStorage.setItem('contactInfo', JSON.stringify(data.contact));
-          }
-          // store footer as plain string to match applyFooterText/load logic
-          if (typeof data.footer !== 'undefined') {
-            localStorage.setItem('footerText', data.footer);
-          }
-        } else {
-          console.warn('⚠️ Fetch responded with status', response.status, response.statusText);
-          // keep this.data as-is (likely empty) so renders won't throw
-          this.data = this.data || {};
-        }
-      } catch (err) {
-        console.error('📁 data.json not found or error loading:', err);
-        // ensure this.data exists so later code is safe
-        this.data = this.data || {};
-      }
+    
+    // Prepare content
+    const content = btoa(unescape(encodeURIComponent(JSON.stringify(newData, null, 2))));
+    
+    // Push update
+    const putResponse = await fetch(apiUrl, {
+      method: 'PUT',
+      headers: {
+        'Authorization': `token ${token}`,
+        'Accept': 'application/vnd.github.v3+json',
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        message: `Update data.json - ${new Date().toLocaleString('sk-SK')}`,
+        content: content,
+        sha: sha,
+        branch: GITHUB_CONFIG.branch
+      })
+    });
+    
+    if (!putResponse.ok) {
+      const errData = await putResponse.json();
+      throw new Error(errData.message || `HTTP ${putResponse.status}`);
     }
+    
+    console.log('✅ Data saved to GitHub successfully');
+    siteData = newData;
+    return true;
+  } catch (err) {
+    console.error('❌ Failed to save to GitHub:', err);
+    alert('Chyba pri ukladaní na GitHub: ' + err.message);
+    return false;
+  }
+}
 
-    init() {
-      this.setupNavigation();
-      this.setupScrollEffects();
-      this.renderActivities();
-      // history/nature/rules/magic are global functions (renderers), call them directly
-      renderHistory();
-      renderNature();
-      renderRules();
-      renderMagic();
-      this.setupContactForm();
+// =============================================================================
+// APPLY FUNCTIONS - render data to DOM
+// =============================================================================
 
-      this.loadAndApplyAllSections();
+function applyHeroSection(data) {
+  if (!data) return;
+  
+  const eyebrow = document.querySelector('.hero-eyebrow');
+  if (eyebrow) eyebrow.textContent = data.eyebrow || '';
+  
+  const mainHeadline = document.querySelector('.hero-headline-main');
+  if (mainHeadline) mainHeadline.textContent = data.mainHeadline || '';
+  
+  const subHeadline = document.querySelector('.hero-headline-sub');
+  if (subHeadline) subHeadline.textContent = data.subHeadline || '';
+  
+  const description = document.querySelector('.hero-description');
+  if (description) description.textContent = data.description || '';
+  
+  const heroImage = document.querySelector('.hero-image');
+  if (heroImage && data.backgroundImage) {
+    heroImage.style.backgroundImage = `linear-gradient(rgba(58, 47, 42, 0.3), rgba(44, 74, 57, 0.4)), url('${data.backgroundImage}')`;
+    heroImage.style.backgroundAttachment = 'fixed';
+    heroImage.style.backgroundPosition = 'center';
+    heroImage.style.backgroundRepeat = 'no-repeat';
+    heroImage.style.backgroundSize = 'cover';
+  }
+}
 
-      this.initializeAnimations();
-      this.setupLocalStorageListener();
-      // When the tab/window regains focus, re-load sections from localStorage.
-      // This helps when admin edits in the same browser (navigating between pages)
-      window.addEventListener('focus', () => {
-        try {
-          this.loadAndApplyAllSections();
-        } catch (err) {
-          console.error('Error reloading sections on focus', err);
-        }
-      });
-
-      // Auto-refresh from data.json every 30 seconds (for multi-computer sync)
-      setInterval(() => {
-        this.loadDataFromFile().then(() => {
-          console.log('🔄 Auto-refreshed data from data.json');
-          this.renderActivities();
-          renderHistory();
-          renderNature();
-          renderRules();
-          renderMagic();
-        }).catch(err => {
-          console.error('Auto-refresh failed:', err);
-        });
-      }, 30000); // 30 seconds
-    }
-
-    setupNavigation() {
-      const navbar = document.getElementById("mainNav");
-      const navLinks = document.querySelectorAll(".nav-link");
-      const sections = document.querySelectorAll("section[id]");
-      let ticking = false;
-      const updateNavbar = () => {
-        if (!navbar) { ticking = false; return; }
-        if (window.scrollY > 100) {
-          navbar.classList.add("scrolled");
-        } else {
-          navbar.classList.remove("scrolled");
-        }
-        let current = "";
-        sections.forEach((section) => {
-          const sectionTop = section.offsetTop - 150;
-          if (window.pageYOffset >= sectionTop) {
-            current = section.getAttribute("id");
-          }
-        });
-        navLinks.forEach((link) => {
-          link.classList.remove("active");
-          if (link.getAttribute("href").substring(1) === current) {
-            link.classList.add("active");
-          }
-        });
-        ticking = false;
-      };
-      window.addEventListener("scroll", () => {
-        if (!ticking) {
-          requestAnimationFrame(updateNavbar);
-          ticking = true;
-        }
-      });
-      navLinks.forEach((link) => {
-        link.addEventListener("click", (e) => {
-          e.preventDefault();
-          const targetId = link.getAttribute("href").substring(1);
-          const targetSection = document.getElementById(targetId);
-          if (targetSection) {
-            const offsetTop = targetSection.offsetTop - 80;
-            window.scrollTo({
-              top: offsetTop,
-              behavior: "smooth",
-            });
-          }
-        });
-      });
-    }
-
-    setupScrollEffects() {
-      let ticking = false;
-      const updateParallax = () => {
-        const scrolled = window.pageYOffset;
-        const heroImage = document.querySelector(".hero-image");
-        if (heroImage && scrolled < window.innerHeight) {
-          const rate = scrolled * -0.3;
-          heroImage.style.transform = `translateY(${rate}px)`;
-        }
-        ticking = false;
-      };
-      window.addEventListener("scroll", () => {
-        if (!ticking) {
-          requestAnimationFrame(updateParallax);
-          ticking = true;
-        }
-      });
-    }
-
-    renderActivities() {
-      const activitiesGrid = document.getElementById("activitiesGrid");
-      if (!activitiesGrid) return;
-
-      // Update section header with custom text
-      try {
-        const headerData = JSON.parse(localStorage.getItem("activitiesHeader") || "{}");
-        const activitiesSection = document.getElementById("activities");
-        if (activitiesSection) {
-          const header = activitiesSection.querySelector(".section-header");
-          if (header) {
-            header.innerHTML = `
-              ${headerData.eyebrow ? `<p class="section-eyebrow">${headerData.eyebrow}</p>` : '<p class="section-eyebrow">Naše aktivity</p>'}
-              <h2 class="section-title">${headerData.title || 'Rozsiahla činnosť pre ochranu a rozvoj'}</h2>
-              ${headerData.description ? `<p class="section-description">${headerData.description}</p>` : '<p class="section-description">Každý z našich projektov predstavuje precizné spojenie odbornosti, miestnej znalosti a dlhodobéj vízie udržateľného rozvoja.</p>'}
-            `;
-          }
-        }
-      } catch (err) {
-        console.error('Error updating activities header:', err);
-      }
-
-      // Load all activities from localStorage
-      let activities = [];
-      try {
-        activities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
-      } catch (err) {
-        console.error('Error loading activities:', err);
-      }
-      activitiesGrid.innerHTML = activities
-        .map(
-          (activity, idx) => `
-        <article class="activity-card" tabindex="0" data-idx="${idx}" data-category="${
-            (activity.category || "").toLowerCase()
-          }">
-            ${
-              activity.image
-                ? `<img src="${activity.image}" alt="obrázok" class="activity-card-image">`
-                : ""
-            }
-            <span class="activity-card-category">${activity.category || ""}</span>
-            <h3 class="activity-card-title">${activity.title}</h3>
-            <div class="activity-card-action">
-                <button type="button" class="activity-toggle" aria-label="Zobraziť detail aktivity" data-idx="${idx}">Zobraziť detail</button>
-            </div>
-        </article>
-        `
-        )
-        .join("");
-      if (!document.getElementById("activityModal")) {
-        const modal = document.createElement("div");
-        modal.id = "activityModal";
-        modal.style.display = "none";
-        modal.innerHTML = `
-        <div id="activityModalOverlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;">
-            <div id="activityModalContent" style="background:#fff;max-width:600px;width:90vw;max-height:90vh;overflow:auto;border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:2.5em 2em;position:relative;">
-                <button id="closeActivityModal" style="position:absolute;top:18px;right:18px;font-size:1.7em;background:none;border:none;cursor:pointer;">&times;</button>
-                <div id="activityModalBody"></div>
-            </div>
-        </div>
-        `;
-        document.body.appendChild(modal);
-      }
-      const modal = document.getElementById("activityModal");
-      const modalOverlay = modal.querySelector("#activityModalOverlay");
-      const modalBody = modal.querySelector("#activityModalBody");
-      const closeBtn = modal.querySelector("#closeActivityModal");
-      document.querySelectorAll(".activity-toggle").forEach((btn) => {
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          const idx = btn.getAttribute("data-idx");
-          const activity = activities[idx];
-          modalBody.innerHTML = `
-            ${
-              activity.image
-                ? `<img src="${activity.image}" alt="obrázok" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;">`
-                : ""
-            }
-            <h2 style="margin-top:1em;">${activity.title}</h2>
-            <div style="margin:1em 0 1.5em 0;color:#888;font-weight:500;">${activity.category || ""}</div>
-            <div style="font-size:1.1em;">${activity.description}</div>
-            <div style="margin-top:1.5em;font-size:1.05em;"><strong>Výsledok:</strong> ${
-              activity.impact || ""
-            }</div>
-            `;
-          modal.style.display = "block";
-        });
-      });
-      closeBtn.onclick = () => {
-        modal.style.display = "none";
-      };
-      modalOverlay.onclick = (e) => {
-        if (e.target === modalOverlay) modal.style.display = "none";
-      };
-    }
-
-    renderEvents() {
-      const eventsTimeline = document.getElementById("eventsTimeline");
-      if (!eventsTimeline) return;
-      let adminEvents = [];
-      try {
-        adminEvents = JSON.parse(localStorage.getItem("adminEvents") || "[]");
-      } catch {}
-      const remoteEvents = (this.data && Array.isArray(this.data.events)) ? this.data.events : [];
-      const allEvents = [...adminEvents, ...remoteEvents];
-      eventsTimeline.innerHTML = allEvents
-        .map(
-          (event, idx) => `
-      <article class="event-item" tabindex="0" data-idx="${idx}">
-        <div class="event-date-place" style="margin-bottom:0.3em;">
-            <b>${event.date || ""}</b>
-            ${
-              event.place
-                ? `<span style='color:#a88b2a;margin-left:0.7em;'>${event.place}</span>`
-                : ""
-            }
-        </div>
-        <h3 class="event-title">${event.title}</h3>
-        <div class="event-card-action" style="margin-top:0.7em;display:flex;justify-content:center;">
-            <button type="button" class="event-toggle" aria-label="Zobraziť detail podujatia" data-idx="${idx}">Zobraziť detail</button>
-        </div>
-      </article>
-      `
-        )
-        .join("");
-      if (!document.getElementById("eventModal")) {
-        const modal = document.createElement("div");
-        modal.id = "eventModal";
-        modal.style.display = "none";
-        modal.innerHTML = `
-          <div id="eventModalOverlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;">
-              <div id="eventModalContent" style="background:#fff;max-width:600px;width:90vw;max-height:90vh;overflow:auto;border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:2.5em 2em;position:relative;">
-                  <button id="closeEventModal" style="position:absolute;top:18px;right:18px;font-size:1.7em;background:none;border:none;cursor:pointer;">&times;</button>
-                  <div id="eventModalBody"></div>
-              </div>
-          </div>
-        `;
-        document.body.appendChild(modal);
-      }
-      const modal = document.getElementById("eventModal");
-      const modalOverlay = modal.querySelector("#eventModalOverlay");
-      const modalBody = modal.querySelector("#eventModalBody");
-      const closeBtn = modal.querySelector("#closeEventModal");
-      document.querySelectorAll(".event-toggle").forEach((btn) => {
-        btn.addEventListener("click", function (e) {
-          e.preventDefault();
-          const idx = btn.getAttribute("data-idx");
-          const event = allEvents[idx];
-          modalBody.innerHTML = `
-            <h2 style="margin-top:1em;">${event.title}</h2>
-            <div style="margin:1em 0 0.5em 0;color:#888;font-weight:500;">
-                ${event.date ? `<b>${event.date}</b>` : ""}
-                ${
-                  event.place
-                    ? `<span style='color:#a88b2a;margin-left:0.7em;'>${event.place}</span>`
-                    : ""
-                }
-            </div>
-            <div style="font-size:1.1em;">${event.description || ""}</div>
-            `;
-          modal.style.display = "block";
-        });
-      });
-      closeBtn.onclick = () => {
-        modal.style.display = "none";
-      };
-      modalOverlay.onclick = (e) => {
-        if (e.target === modalOverlay) modal.style.display = "none";
-      };
-    }
-
-    renderTeam() {
-      const teamGrid = document.getElementById("teamGrid");
-      if (!teamGrid) return;
-      let teamData = [];
-      try {
-        teamData = JSON.parse(localStorage.getItem("teamMembers")) || (this.data && this.data.team) || [];
-      } catch {
-        teamData = (this.data && this.data.team) || [];
-      }
-      teamGrid.innerHTML = teamData
-        .map(
-          (member) => `
-        <article class="team-member">
-          <div class="member-avatar" style="width:70px;height:70px;overflow:hidden;border-radius:50%;margin-bottom:0.7em;background:#eee;display:flex;align-items:center;justify-content:center;">
-            ${
-              member.image
-                ? `<img src="${member.image}" alt="${member.name}" style="width:100%;height:100%;object-fit:cover;">`
-                : member.initials || ""
-            }
-          </div>
-          <h3 class="member-name">${member.name || ""}</h3>
-          <div class="member-position">${member.position || ""}</div>
-          <div class="member-credentials">${member.credentials || ""}</div>
-          <div class="member-experience">${member.experience || ""}</div>
-        </article>
-      `
-        )
-        .join("");
-    }
-
-    setupContactForm() {
-      // Your contact form code if any
-    }
-
-    initializeAnimations() {
-      // Your animation init code if any
-    }
-
-    setupLocalStorageListener() {
-      window.addEventListener("storage", (event) => {
-        if (!event.key) return;
-
-        // Handle force refresh trigger from admin
-        if (event.key === '_refresh_trigger') {
-          console.log('🔄 Refresh triggered from admin panel');
-          window.location.reload();
-          return;
-        }
-
-        try {
-          switch (event.key) {
-            case "heroSection":
-              applyHeroSection(JSON.parse(event.newValue || '{}'));
-              break;
-            case "aboutSection":
-              applyAboutSection(JSON.parse(event.newValue || '{}'));
-              break;
-            case "adminActivities":
-              // re-render activities both on admin list and public grid
-              this.renderActivities();
-              break;
-            case "adminEvents":
-              this.renderEvents();
-              break;
-            case "historySection":
-              renderHistory();
-              break;
-            case "natureSection":
-              renderNature();
-              break;
-            case "rulesSection":
-              renderRules();
-              break;
-            case "magicSection":
-              renderMagic();
-              break;
-            case "contactInfo":
-              try { applyContactInfo(JSON.parse(event.newValue || '{}')); } catch {}
-              break;
-            case "footerText":
-              applyFooterText(event.newValue || '');
-              break;
-            default:
-              break;
-          }
-        } catch (err) {
-          console.error('Error handling storage event for', event.key, err);
-        }
-      });
-    }
-
-    loadAndApplyAllSections() {
-      ['heroSection', 'aboutSection', 'adminActivities', 'adminEvents', 'historySection', 'natureSection', 'rulesSection', 'magicSection', 'contactInfo'].forEach((key) => {
-        let data = localStorage.getItem(key);
-        if (!data) return;
-        try {
-          data = JSON.parse(data);
-        } catch {
-          return;
-        }
-        switch(key){
-          case 'heroSection': applyHeroSection(data); break;
-          case 'aboutSection': applyAboutSection(data); break;
-          case 'adminActivities': this.renderActivities(); break;
-          case 'adminEvents': this.renderEvents(); break;
-          case 'historySection': renderHistory(); break;
-          case 'natureSection': renderNature(); break;
-          case 'rulesSection': renderRules(); break;
-          case 'magicSection': renderMagic(); break;
-          case 'contactInfo': applyContactInfo(data); break;
-        }
-      });
-
-      // footerText may be stored as plain string or JSON-encoded string; handle both
-      let footerText = localStorage.getItem('footerText');
-      if (footerText) {
-        try {
-          const parsed = JSON.parse(footerText);
-          // if parsed is object/array, try to find text field, else fallback to original string
-          if (typeof parsed === 'string') {
-            applyFooterText(parsed);
-          } else if (parsed && parsed.text) {
-            applyFooterText(parsed.text);
-          } else {
-            // use original raw value when parsed isn't useful
-            applyFooterText(footerText);
-          }
-        } catch {
-          applyFooterText(footerText);
-        }
-      }
+function applyAboutSection(data) {
+  if (!data) return;
+  
+  const aboutSection = document.querySelector('#about');
+  if (aboutSection) {
+    const header = aboutSection.querySelector('.section-header');
+    if (header) {
+      const eyebrow = header.querySelector('.section-eyebrow');
+      const title = header.querySelector('.section-title');
+      const description = header.querySelector('.section-description');
+      if (eyebrow) eyebrow.textContent = data.eyebrow || 'O NAŠOM ZDRUŽENÍ';
+      if (title) title.textContent = data.title || 'Posvätenosť horám a komunite';
+      if (description) description.textContent = data.description || '';
     }
   }
 
-  function applyHeroSection(data) {
-    const eyebrow = document.querySelector(".hero-eyebrow");
-    if (eyebrow) eyebrow.textContent = data.eyebrow || "";
-    const mainHeadline = document.querySelector(".hero-headline-main");
-    if (mainHeadline) mainHeadline.textContent = data.mainHeadline || "";
-    const subHeadline = document.querySelector(".hero-headline-sub");
-    if (subHeadline) subHeadline.textContent = data.subHeadline || "";
-    const description = document.querySelector(".hero-description");
-    if (description) description.textContent = data.description || "";
-    const heroImage = document.querySelector(".hero-image");
-    if (heroImage && data.backgroundImage) {
-      heroImage.style.backgroundImage = `linear-gradient(rgba(58, 47, 42, 0.3), rgba(44, 74, 57, 0.4)), url('${data.backgroundImage}')`;
-      heroImage.style.backgroundAttachment = "fixed";
-      heroImage.style.backgroundPosition = "center";
-      heroImage.style.backgroundRepeat = "no-repeat";
-      heroImage.style.backgroundSize = "cover";
+  const leadEl = document.querySelector('.lead-text');
+  if (leadEl) leadEl.textContent = data.lead || '';
+  
+  const paragraphs = document.querySelectorAll('.about-narrative p');
+  if (paragraphs.length >= 2) {
+    if (data.paragraph1 || data.paragraph2) {
+      paragraphs[0].textContent = data.paragraph1 || '';
+      paragraphs[1].textContent = data.paragraph2 || '';
+    } else if (data.content) {
+      const parts = data.content.split('\n\n');
+      paragraphs[0].textContent = parts[0] || '';
+      paragraphs[1].textContent = parts.slice(1).join('\n\n') || '';
     }
   }
+  
+  const imgEl = document.querySelector('.about-visual img');
+  if (imgEl && data.image) imgEl.src = data.image;
+}
 
-  function applyAboutSection(data) {
-    // Update section header
-    const aboutSection = document.querySelector("#about");
-    if (aboutSection) {
-      const header = aboutSection.querySelector(".section-header");
-      if (header) {
-        const eyebrow = header.querySelector(".section-eyebrow");
-        const title = header.querySelector(".section-title");
-        const description = header.querySelector(".section-description");
-        if (eyebrow) eyebrow.textContent = data.eyebrow || "O NAŠOM ZDRUŽENÍ";
-        if (title) title.textContent = data.title || "Posvätenosť horám a komunite";
-        if (description) description.textContent = data.description || "aa";
-      }
-    }
-
-    const leadEl = document.querySelector(".lead-text");
-    if(leadEl) leadEl.textContent = data.lead || '';
-    const paragraphs = document.querySelectorAll(".about-narrative p");
-    if(paragraphs.length >=2){
-      // support older shape (paragraph1/2) and newer shape (content)
-      if (data.paragraph1 || data.paragraph2) {
-        paragraphs[0].textContent = data.paragraph1 || '';
-        paragraphs[1].textContent = data.paragraph2 || '';
-      } else if (data.content) {
-        // split content into two paragraphs if possible
-        const parts = data.content.split('\n\n');
-        paragraphs[0].textContent = parts[0] || '';
-        paragraphs[1].textContent = parts.slice(1).join('\n\n') || '';
-      }
-    }
-    const imgEl = document.querySelector(".about-visual img");
-    if(imgEl) imgEl.src = data.image || '';
+function applyContactInfo(data) {
+  if (!data) return;
+  
+  const contactSection = document.getElementById('contact');
+  if (!contactSection) return;
+  
+  const contactMethods = contactSection.querySelectorAll('.contact-method .method-details p');
+  if (contactMethods.length >= 3) {
+    contactMethods[0].innerHTML = (data.address || '').replace(/\n/g, '<br>');
+    contactMethods[1].textContent = data.phone || '';
+    contactMethods[2].textContent = data.email || '';
   }
+}
 
+function applyFooterText(text) {
+  const footerP = document.querySelector('.footer-bottom p');
+  if (footerP) footerP.textContent = text || '';
+}
 
-  function applyImpactMetrics(metrics) {
-    const metricsGrid = document.querySelector(".metrics-grid");
-    if (!metricsGrid) return;
+function renderActivities() {
+  const activitiesGrid = document.getElementById('activitiesGrid');
+  if (!activitiesGrid) return;
 
-    metricsGrid.innerHTML = metrics
-      .map(
-        (m) => `
-        <div class="metric-card" tabindex="0">
-          <div class="metric-value">${m.value || ""}<span class="metric-unit">${m.unit || ""}</span></div>
-          <div class="metric-label">${m.label || ""}</div>
-        </div>`
-      )
-      .join("");
-  }
-
-  function applyTeamMembers(team) {
-    const teamGrid = document.getElementById("teamGrid");
-    if (!teamGrid) return;
-
-    teamGrid.innerHTML = team
-      .map(
-        (m) => `
-      <article class="team-member">
-        <div class="member-avatar" style="width:70px;height:70px;overflow:hidden;border-radius:50%;margin-bottom:0.7em;background:#eee;display:flex;align-items:center;justify-content:center;">
-          ${
-            m.image
-              ? `<img src="${m.image}" alt="${m.name}" style="width:100%;height:100%;object-fit:cover;">`
-              : ""
-          }
-        </div>
-        <h3 class="member-name">${m.name || ""}</h3>
-        <div class="member-position">${m.position || ""}</div>
-        <div class="member-credentials">${m.credentials || ""}</div>
-        <div class="member-experience">${m.experience || ""}</div>
-      </article>`
-      )
-      .join("");
-  }
-
-  function applyContactInfo(data) {
-    const contactSection = document.getElementById("contact");
-    if (!contactSection) return;
-    const contactMethods = contactSection.querySelectorAll(".contact-method .method-details p");
-    if (contactMethods.length >= 3) {
-      contactMethods[0].innerHTML = (data.address || "").replace(/\n/g, "<br>");
-      contactMethods[1].textContent = data.phone || "";
-      contactMethods[2].textContent = data.email || "";
-    }
-  }
-
-  function applyFooterText(text) {
-    const footerP = document.querySelector(".footer-bottom p");
-    if (footerP) footerP.textContent = text || "";
-  }
-
-  // New section rendering functions
-  function renderHistory() {
-    const historyContent = document.getElementById("historyContent");
-    if (!historyContent) return;
-
-    try {
-      const historyData = JSON.parse(localStorage.getItem("historySection")) || {};
-      const subsections = historyData.subsections || [];
-
-      // Update section header
-      const historySection = document.getElementById("history");
-      if (historySection) {
-        const header = historySection.querySelector(".section-header");
-        if (header) {
-          header.innerHTML = `
-            ${historyData.eyebrow ? `<p class="section-eyebrow">${historyData.eyebrow}</p>` : ''}
-            <h2 class="section-title">${historyData.title || ""}</h2>
-            ${historyData.description ? `<p class="section-description">${historyData.description}</p>` : ''}
-          `;
-        }
-      }
-
-      historyContent.innerHTML = `
-        <div class="content-layout">
-          <div class="content-text">
-            <div class="content-body">${historyData.content || ""}</div>
-
-            ${subsections.length > 0 ? `
-              <div class="content-subsections">
-                ${subsections.map(sub => `
-                  <div class="subsection-item">
-                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
-                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            ` : ""}
-          </div>
-          ${historyData.image ? `
-            <div class="content-image">
-              <img src="${historyData.image}" alt="História Podbanského">
-            </div>
-          ` : ""}
-        </div>
+  const activities = siteData.activities || [];
+  
+  // Update section header
+  const activitiesSection = document.getElementById('activities');
+  if (activitiesSection) {
+    const header = activitiesSection.querySelector('.section-header');
+    if (header) {
+      header.innerHTML = `
+        <p class="section-eyebrow">Naše aktivity</p>
+        <h2 class="section-title">Rozsiahla činnosť pre ochranu a rozvoj</h2>
+        <p class="section-description">Každý z našich projektov predstavuje precízne spojenie odbornosti, miestnej znalosti a dlhodobej vízie udržateľného rozvoja.</p>
       `;
-    } catch (err) {
-      console.error("Error rendering history section:", err);
     }
   }
 
-  function renderNature() {
-    const natureContent = document.getElementById("natureContent");
-    if (!natureContent) return;
+  activitiesGrid.innerHTML = activities.map((activity, idx) => `
+    <article class="activity-card" tabindex="0" data-idx="${idx}" data-category="${(activity.category || '').toLowerCase()}">
+      ${activity.image ? `<img src="${activity.image}" alt="obrázok" class="activity-card-image">` : ''}
+      <span class="activity-card-category">${activity.category || ''}</span>
+      <h3 class="activity-card-title">${activity.title || ''}</h3>
+      <div class="activity-card-action">
+        <button type="button" class="activity-toggle" aria-label="Zobraziť detail aktivity" data-idx="${idx}">Zobraziť detail</button>
+      </div>
+    </article>
+  `).join('');
 
-    try {
-      const natureData = JSON.parse(localStorage.getItem("natureSection")) || {};
-      const subsections = natureData.subsections || [];
+  // Setup modal
+  setupActivityModal(activities);
+}
 
-      // Update section header
-      const natureSection = document.getElementById("nature");
-      if (natureSection) {
-        const header = natureSection.querySelector(".section-header");
-        if (header) {
-          header.innerHTML = `
-            ${natureData.eyebrow ? `<p class="section-eyebrow">${natureData.eyebrow}</p>` : ''}
-            <h2 class="section-title">${natureData.title || ""}</h2>
-            ${natureData.description ? `<p class="section-description">${natureData.description}</p>` : ''}
-          `;
-        }
-      }
-
-      natureContent.innerHTML = `
-        <div class="content-layout">
-          <div class="content-text">
-            <div class="content-body">${natureData.content || ""}</div>
-
-            ${subsections.length > 0 ? `
-              <div class="content-subsections">
-                ${subsections.map(sub => `
-                  <div class="subsection-item">
-                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
-                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            ` : ""}
-          </div>
-          ${natureData.image ? `
-            <div class="content-image">
-              <img src="${natureData.image}" alt="Príroda Podbanského">
-            </div>
-          ` : ""}
+function setupActivityModal(activities) {
+  if (!document.getElementById('activityModal')) {
+    const modal = document.createElement('div');
+    modal.id = 'activityModal';
+    modal.style.display = 'none';
+    modal.innerHTML = `
+      <div id="activityModalOverlay" style="position:fixed;top:0;left:0;width:100vw;height:100vh;background:rgba(0,0,0,0.55);z-index:10000;display:flex;align-items:center;justify-content:center;">
+        <div id="activityModalContent" style="background:#fff;max-width:600px;width:90vw;max-height:90vh;overflow:auto;border-radius:18px;box-shadow:0 8px 32px rgba(0,0,0,0.18);padding:2.5em 2em;position:relative;">
+          <button id="closeActivityModal" style="position:absolute;top:18px;right:18px;font-size:1.7em;background:none;border:none;cursor:pointer;">&times;</button>
+          <div id="activityModalBody"></div>
         </div>
+      </div>
+    `;
+    document.body.appendChild(modal);
+  }
+
+  const modal = document.getElementById('activityModal');
+  const modalOverlay = modal.querySelector('#activityModalOverlay');
+  const modalBody = modal.querySelector('#activityModalBody');
+  const closeBtn = modal.querySelector('#closeActivityModal');
+
+  document.querySelectorAll('.activity-toggle').forEach((btn) => {
+    btn.addEventListener('click', function(e) {
+      e.preventDefault();
+      const idx = parseInt(btn.getAttribute('data-idx'));
+      const activity = activities[idx];
+      if (!activity) return;
+      
+      modalBody.innerHTML = `
+        ${activity.image ? `<img src="${activity.image}" alt="obrázok" style="width:100%;max-height:260px;object-fit:cover;border-radius:12px;">` : ''}
+        <h2 style="margin-top:1em;">${activity.title || ''}</h2>
+        <div style="margin:1em 0 1.5em 0;color:#888;font-weight:500;">${activity.category || ''}</div>
+        <div style="font-size:1.1em;">${activity.description || ''}</div>
+        <div style="margin-top:1.5em;font-size:1.05em;"><strong>Výsledok:</strong> ${activity.impact || ''}</div>
       `;
-    } catch (err) {
-      console.error("Error rendering nature section:", err);
-    }
-  }
-
-  function renderRules() {
-    const rulesContent = document.getElementById("rulesContent");
-    if (!rulesContent) return;
-
-    try {
-      const rulesData = JSON.parse(localStorage.getItem("rulesSection")) || {};
-      const subsections = rulesData.subsections || [];
-
-      // Update section header
-      const rulesSection = document.getElementById("rules");
-      if (rulesSection) {
-        const header = rulesSection.querySelector(".section-header");
-        if (header) {
-          header.innerHTML = `
-            ${rulesData.eyebrow ? `<p class="section-eyebrow">${rulesData.eyebrow}</p>` : ''}
-            <h2 class="section-title">${rulesData.title || ""}</h2>
-            ${rulesData.description ? `<p class="section-description">${rulesData.description}</p>` : ''}
-          `;
-        }
-      }
-
-      rulesContent.innerHTML = `
-        <div class="content-layout">
-          <div class="content-text">
-            <div class="content-body">${rulesData.content || ""}</div>
-
-            ${subsections.length > 0 ? `
-              <div class="content-subsections">
-                ${subsections.map(sub => `
-                  <div class="subsection-item">
-                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
-                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            ` : ""}
-          </div>
-        </div>
-      `;
-    } catch (err) {
-      console.error("Error rendering rules section:", err);
-    }
-  }
-
-  function renderMagic() {
-    const magicContent = document.getElementById("magicContent");
-    if (!magicContent) return;
-
-    try {
-      const magicData = JSON.parse(localStorage.getItem("magicSection")) || {};
-      const images = magicData.images || [];
-      const subsections = magicData.subsections || [];
-
-      // Update section header
-      const magicSection = document.getElementById("magic");
-      if (magicSection) {
-        const header = magicSection.querySelector(".section-header");
-        if (header) {
-          header.innerHTML = `
-            ${magicData.eyebrow ? `<p class="section-eyebrow">${magicData.eyebrow}</p>` : ''}
-            <h2 class="section-title">${magicData.title || ""}</h2>
-            ${magicData.description ? `<p class="section-description">${magicData.description}</p>` : ''}
-          `;
-        }
-      }
-
-      magicContent.innerHTML = `
-        <div class="content-layout">
-          <div class="content-text">
-            <div class="content-body">${magicData.content || ""}</div>
-
-            ${subsections.length > 0 ? `
-              <div class="content-subsections">
-                ${subsections.map(sub => `
-                  <div class="subsection-item">
-                    ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
-                    ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
-                  </div>
-                `).join('')}
-              </div>
-            ` : ""}
-          </div>
-          ${images.length > 0 ? `
-            <div class="magic-images-grid">
-              ${images.map((img, index) => `
-                <div class="magic-image-item">
-                  <img src="${img.url}" alt="${img.caption || 'Magické Podbanské'}">
-                  ${img.caption ? `<p class="image-caption">${img.caption}</p>` : ''}
-                </div>
-              `).join('')}
-            </div>
-          ` : ""}
-        </div>
-      `;
-    } catch (err) {
-      console.error("Error rendering magic section:", err);
-    }
-  }
-
-  // ---------------------------------
-  // Admin panel functionality
-  // ---------------------------------
-  class ElegantAdminPanel {
-    constructor() {
-      this.setupAdmin();
-    }
-
-    setupAdmin() {
-      if (window.location.pathname.includes("admin.html")) {
-        this.initAdminPage();
-      }
-    }
-
-    initAdminPage() {
-      const loginForm = document.getElementById("adminLoginForm");
-      if (loginForm) {
-        loginForm.addEventListener("submit", (e) => {
-          e.preventDefault();
-          this.handleLogin();
-        });
-      }
-    }
-
-    handleLogin() {
-      const username = document.getElementById("adminUsername")?.value.trim();
-      const password = document.getElementById("adminPassword")?.value.trim();
-
-      if (username === "admin" && password === "podban2024") {
-        this.showAdminDashboard();
-      } else {
-        this.showLoginError();
-      }
-    }
-
-    showLoginError() {
-      const errorDiv = document.getElementById("adminLoginError");
-      if (errorDiv) {
-        errorDiv.textContent = "Nesprávne prihlasovacie údaje.";
-        errorDiv.style.display = "block";
-        setTimeout(() => {
-          errorDiv.style.display = "none";
-        }, 3000);
-      }
-    }
-
-    showAdminDashboard() {
-      const loginScreen = document.getElementById("adminLoginScreen");
-      const dashboard = document.getElementById("adminDashboard");
-      if (!loginScreen || !dashboard) {
-        console.error("Login screen or dashboard not found");
-        return;
-      }
-      loginScreen.classList.add("hidden");
-      dashboard.classList.remove("hidden");
-      // Hide login screen and show dashboard
-      loginScreen.classList.add("hidden");
-      dashboard.classList.remove("hidden");
-      // Initialize admin management UI and handlers
-      this.initAdminManagement();
-    }
-
-    initAdminManagement() {
-      this.setupNavigationManagement();
-      this.setupHeroSectionManagement();
-      this.setupAboutSectionManagement();
-      this.setupActivitiesManagement();
-      this.setupEventsManagement();
-      this.setupContactManagement();
-      this.setupFooterManagement();
-    }
-
-    // Navigation management - example
-    setupNavigationManagement() {
-      let navData =
-        JSON.parse(localStorage.getItem("siteNavigation")) || [
-          { label: "Domov", href: "#home" },
-          { label: "O združení", href: "#about" },
-          { label: "Naša činnosť", href: "#activities" },
-          { label: "Výsledky", href: "#impact" },
-          { label: "Tím", href: "#team" },
-          { label: "Kontakt", href: "#contact" },
-        ];
-      const navEditForm = document.getElementById("navEditForm");
-      const navList = document.getElementById("navList");
-
-      function renderNavItems() {
-        if (!navList) return;
-        navList.innerHTML = navData
-          .map(
-            (item, i) => `
-            <div style="display:flex;gap:1em;align-items:center;margin-bottom:8px;">
-              <span><strong>${item.label}</strong> (${item.href})</span>
-              <button data-index="${i}" class="btn-delete btn btn-danger">Vymazať</button>
-              <button data-index="${i}" class="btn-edit btn btn-outline">Upraviť</button>
-            </div>`
-          )
-          .join("");
-        // Attach event listeners
-        navList.querySelectorAll(".btn-delete").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            navData.splice(parseInt(btn.dataset.index), 1);
-            saveAndRender();
-          });
-        });
-        navList.querySelectorAll(".btn-edit").forEach((btn) => {
-          btn.addEventListener("click", () => {
-            const idx = parseInt(btn.dataset.index);
-            document.getElementById("navItemLabel").value = navData[idx].label;
-            document.getElementById("navItemHref").value = navData[idx].href;
-            navEditForm.onsubmit = (e) => {
-              e.preventDefault();
-              navData[idx] = {
-                label: document.getElementById("navItemLabel").value,
-                href: document.getElementById("navItemHref").value,
-              };
-              saveAndRender();
-              navEditForm.reset();
-              navEditForm.onsubmit = defaultNavSubmit;
-            };
-          });
-        });
-      }
-
-      function updatePageNavigation() {
-        const navMenu = document.getElementById("navMenu");
-        if (!navMenu) return;
-        navMenu.innerHTML = navData
-          .map((item) => `<li><a href="${item.href}" class="nav-link">${item.label}</a></li>`)
-          .join("");
-      }
-
-      function saveAndRender() {
-        localStorage.setItem("siteNavigation", JSON.stringify(navData));
-        renderNavItems();
-        updatePageNavigation();
-      }
-
-      const defaultNavSubmit = (e) => {
-        e.preventDefault();
-        navData.push({
-          label: document.getElementById("navItemLabel").value,
-          href: document.getElementById("navItemHref").value,
-        });
-        saveAndRender();
-        navEditForm.reset();
-      };
-
-      navEditForm.onsubmit = defaultNavSubmit;
-      renderNavItems();
-      updatePageNavigation();
-    }
-
-    // Hero Section management with image upload
-    setupHeroSectionManagement() {
-      const form = document.getElementById("heroEditForm");
-      if (!form) return;
-
-      let heroData = JSON.parse(localStorage.getItem("heroSection")) || {
-        eyebrow: "",
-        mainHeadline: "",
-        subHeadline: "",
-        description: "",
-        backgroundImage: "",
-      };
-
-      ["heroEyebrow", "heroMainHeadline", "heroSubHeadline", "heroDescription"].forEach(
-        (id) => {
-          const el = document.getElementById(id);
-          if (el) el.value = heroData[id.replace("hero", "").replace(/^\w/, (c) => c.toLowerCase())];
-        }
-      );
-
-      // File input cannot have value set programmatically, so no setting for 'heroBackgroundImage'
-
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
-
-        const eyebrow = document.getElementById("heroEyebrow").value.trim();
-        const mainHeadline = document.getElementById("heroMainHeadline").value.trim();
-        const subHeadline = document.getElementById("heroSubHeadline").value.trim();
-        const description = document.getElementById("heroDescription").value.trim();
-
-        const fileInput = document.getElementById("heroBackgroundImage");
-        let backgroundImage = heroData.backgroundImage;
-
-        if (fileInput.files && fileInput.files[0]) {
-          try {
-            backgroundImage = await new Promise((resolve, reject) => {
-              const reader = new FileReader();
-              reader.onload = () => resolve(reader.result);
-              reader.onerror = () => reject("Nepodarilo načítať obrázok");
-              reader.readAsDataURL(fileInput.files[0]);
-            });
-          } catch (error) {
-            alert(error);
-            return;
-          }
-        }
-
-        heroData = {
-          eyebrow,
-          mainHeadline,
-          subHeadline,
-          description,
-          backgroundImage,
-        };
-
-        localStorage.setItem("heroSection", JSON.stringify(heroData));
-        alert("Zmeny uložené");
-
-        applyHeroSection(heroData);
-      });
-
-      applyHeroSection(heroData);
-    }
-
-    setupAboutSectionManagement() {
-      const form = document.getElementById("aboutEditForm");
-      if (!form) return;
-
-      let aboutData = JSON.parse(localStorage.getItem("aboutSection")) || {
-        lead: "",
-        paragraph1: "",
-        paragraph2: "",
-        image: "",
-      };
-
-      document.getElementById("aboutLeadText").value = aboutData.lead;
-      document.getElementById("aboutParagraph1").value = aboutData.paragraph1;
-      document.getElementById("aboutParagraph2").value = aboutData.paragraph2;
-      document.getElementById("aboutImage").value = aboutData.image;
-
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        aboutData = {
-          lead: document.getElementById("aboutLeadText").value,
-          paragraph1: document.getElementById("aboutParagraph1").value,
-          paragraph2: document.getElementById("aboutParagraph2").value,
-          image: document.getElementById("aboutImage").value.trim(),
-        };
-        localStorage.setItem("aboutSection", JSON.stringify(aboutData));
-        alert("Zmeny uložené");
-      });
-    }
-
-    // Activities management with image upload from file
-    async handleActivityFormSubmit(event) {
-      event.preventDefault();
-
-      const title = document.getElementById("activityTitle").value.trim();
-      const description = document.getElementById("activityDescription").value.trim();
-      const category = document.getElementById("activityCategory").value.trim();
-      const impact = document.getElementById("activityImpact").value.trim();
-
-      const imageInput = document.getElementById("activityImage");
-      let imageDataUrl = "";
-
-      if (imageInput.files && imageInput.files[0]) {
-        try {
-          imageDataUrl = await new Promise((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onload = (e) => resolve(e.target.result);
-            reader.onerror = () => reject("Nepodarilo sa načítať obrázok");
-            reader.readAsDataURL(imageInput.files[0]);
-          });
-        } catch (error) {
-          alert(error);
-          return;
-        }
-      }
-
-      if (!title || !description) {
-        alert("Názov a popis sú povinné.");
-        return;
-      }
-
-      const activities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
-      activities.unshift({
-        title,
-        description,
-        category,
-        impact,
-        image: imageDataUrl,
-      });
-
-      localStorage.setItem("adminActivities", JSON.stringify(activities));
-      alert("Aktivita bola pridaná.");
-      event.target.reset();
-      this.renderActivities();
-    }
-
-    setupActivitiesManagement() {
-      const form = document.getElementById("addActivityForm");
-      if (!form) return;
-      form.addEventListener("submit", this.handleActivityFormSubmit.bind(this));
-      this.renderActivities();
-    }
-
-    renderActivities() {
-      const container = document.getElementById("activityList");
-      if (!container) return;
-      const activities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
-      if (activities.length === 0) {
-        container.innerHTML = "<em>Žiadne aktivity.</em>";
-        return;
-      }
-      container.innerHTML = activities
-        .map(
-          (activity) => `
-        <div style="border-bottom:1px solid #eee;padding:8px 0; display:flex; gap:1rem; align-items:center;">
-          ${
-            activity.image
-              ? `<img src="${activity.image}" alt="${activity.title}" style="max-width:80px; max-height:60px; object-fit:cover; border-radius:6px;">`
-              : ""
-          }
-          <div>
-            <strong>${activity.title}</strong><br />
-            <small>${activity.category || ""} • ${activity.impact || ""}</small>
-            <p style="margin:0;">${activity.description}</p>
-          </div>
-          <button onclick="ElegantAdminPanel.deleteActivity(event)" data-title="${activity.title}" class="btn btn-danger" style="margin-left:auto;">Vymazať</button>
-        </div>
-      `
-        )
-        .join("");
-      container.querySelectorAll("button[data-title]").forEach((button) => {
-        button.addEventListener("click", (e) =>
-          ElegantAdminPanel.deleteActivity.call(this, e)
-        );
-      });
-    }
-
-    static deleteActivity(event) {
-      const title = event.target.dataset.title;
-      const activities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
-      const updated = activities.filter((a) => a.title !== title);
-      localStorage.setItem("adminActivities", JSON.stringify(updated));
-      // Reload activities
-      const panel = new ElegantAdminPanel();
-      panel.renderActivities();
-    }
-
-    // Events management (similar pattern omitted here...)
-
-    setupContactManagement() {
-      const form = document.getElementById("contactEditForm");
-      if (!form) return;
-      let contactData =
-        JSON.parse(localStorage.getItem("contactInfo")) || {
-          address: "Podbanské 123\n059 55 Poprad-Matej",
-          phone: "+421 902 123 456",
-          email: "info@ozpodbanske.sk",
-        };
-      document.getElementById("contactAddress").value = contactData.address;
-      document.getElementById("contactPhone").value = contactData.phone;
-      document.getElementById("contactEmail").value = contactData.email;
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        contactData = {
-          address: document.getElementById("contactAddress").value,
-          phone: document.getElementById("contactPhone").value,
-          email: document.getElementById("contactEmail").value,
-        };
-        localStorage.setItem("contactInfo", JSON.stringify(contactData));
-        alert("Zmeny uložené");
-      });
-    }
-
-    setupFooterManagement() {
-      const form = document.getElementById("footerEditForm");
-      if (!form) return;
-      let footerText =
-        localStorage.getItem("footerText") ||
-        "© 2024 Občianske združenie Podbanské. Všetky práva vyhradené.";
-      document.getElementById("footerText").value = footerText;
-      form.addEventListener("submit", (e) => {
-        e.preventDefault();
-        footerText = document.getElementById("footerText").value;
-        localStorage.setItem("footerText", footerText);
-        alert("Zmeny uložené");
-      });
-    }
-  }
-
-
-  // Start apps and admin panel on DOM load
-  document.addEventListener("DOMContentLoaded", () => {
-    new ElegantMountainApp();
-    // DISABLED: old admin panel - now using ADMIN.HTML instead
-    // new ElegantAdminPanel();
+      modal.style.display = 'block';
+    });
   });
+
+  closeBtn.onclick = () => { modal.style.display = 'none'; };
+  modalOverlay.onclick = (e) => { if (e.target === modalOverlay) modal.style.display = 'none'; };
+}
+
+function renderGenericSection(sectionId, contentId, data) {
+  const contentEl = document.getElementById(contentId);
+  if (!contentEl) return;
+
+  const section = document.getElementById(sectionId);
+  if (section) {
+    const header = section.querySelector('.section-header');
+    if (header) {
+      header.innerHTML = `
+        ${data.eyebrow ? `<p class="section-eyebrow">${data.eyebrow}</p>` : ''}
+        <h2 class="section-title">${data.title || ''}</h2>
+        ${data.description ? `<p class="section-description">${data.description}</p>` : ''}
+      `;
+    }
+  }
+
+  const subsections = data.subsections || [];
+  contentEl.innerHTML = `
+    <div class="content-layout">
+      <div class="content-text">
+        <div class="content-body">${data.content || ''}</div>
+        ${subsections.length > 0 ? `
+          <div class="content-subsections">
+            ${subsections.map(sub => `
+              <div class="subsection-item">
+                ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
+                ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+      ${data.image ? `
+        <div class="content-image">
+          <img src="${data.image}" alt="${data.title || ''}">
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+function renderHistory() {
+  renderGenericSection('history', 'historyContent', siteData.history || {});
+}
+
+function renderNature() {
+  renderGenericSection('nature', 'natureContent', siteData.nature || {});
+}
+
+function renderRules() {
+  renderGenericSection('rules', 'rulesContent', siteData.rules || {});
+}
+
+function renderMagic() {
+  const data = siteData.magic || {};
+  const contentEl = document.getElementById('magicContent');
+  if (!contentEl) return;
+
+  const section = document.getElementById('magic');
+  if (section) {
+    const header = section.querySelector('.section-header');
+    if (header) {
+      header.innerHTML = `
+        ${data.eyebrow ? `<p class="section-eyebrow">${data.eyebrow}</p>` : ''}
+        <h2 class="section-title">${data.title || ''}</h2>
+        ${data.description ? `<p class="section-description">${data.description}</p>` : ''}
+      `;
+    }
+  }
+
+  const subsections = data.subsections || [];
+  const images = data.images || [];
+  
+  contentEl.innerHTML = `
+    <div class="content-layout">
+      <div class="content-text">
+        <div class="content-body">${data.content || ''}</div>
+        ${subsections.length > 0 ? `
+          <div class="content-subsections">
+            ${subsections.map(sub => `
+              <div class="subsection-item">
+                ${sub.title ? `<h4 class="subsection-title">${sub.title}</h4>` : ''}
+                ${sub.content ? `<div class="subsection-content">${sub.content}</div>` : ''}
+              </div>
+            `).join('')}
+          </div>
+        ` : ''}
+      </div>
+      ${images.length > 0 ? `
+        <div class="magic-images-grid">
+          ${images.map(img => `
+            <div class="magic-image-item">
+              <img src="${img.url}" alt="${img.caption || 'Magické Podbanské'}">
+              ${img.caption ? `<p class="image-caption">${img.caption}</p>` : ''}
+            </div>
+          `).join('')}
+        </div>
+      ` : ''}
+    </div>
+  `;
+}
+
+// =============================================================================
+// APPLY ALL SECTIONS
+// =============================================================================
+function applyAllSections() {
+  applyHeroSection(siteData.hero);
+  applyAboutSection(siteData.about);
+  renderActivities();
+  renderHistory();
+  renderNature();
+  renderRules();
+  renderMagic();
+  applyContactInfo(siteData.contact);
+  applyFooterText(siteData.footer);
+}
+
+// =============================================================================
+// MAIN APP CLASS (for index.html)
+// =============================================================================
+class ElegantMountainApp {
+  constructor() {
+    this.init();
+  }
+
+  async init() {
+    // Load data from GitHub first
+    await fetchDataFromGitHub();
+    
+    // Apply all sections
+    applyAllSections();
+    
+    // Setup UI interactions
+    this.setupNavigation();
+    this.setupScrollEffects();
+    
+    // Auto-refresh every 30 seconds
+    setInterval(async () => {
+      console.log('🔄 Auto-refresh from GitHub...');
+      await fetchDataFromGitHub();
+      applyAllSections();
+    }, 30000);
+    
+    // Refresh on window focus
+    window.addEventListener('focus', async () => {
+      await fetchDataFromGitHub();
+      applyAllSections();
+    });
+  }
+
+  setupNavigation() {
+    const navbar = document.getElementById('mainNav');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const sections = document.querySelectorAll('section[id]');
+    
+    let ticking = false;
+    const updateNavbar = () => {
+      if (!navbar) { ticking = false; return; }
+      navbar.classList.toggle('scrolled', window.scrollY > 100);
+      
+      let current = '';
+      sections.forEach((section) => {
+        if (window.pageYOffset >= section.offsetTop - 150) {
+          current = section.getAttribute('id');
+        }
+      });
+      
+      navLinks.forEach((link) => {
+        link.classList.toggle('active', link.getAttribute('href')?.substring(1) === current);
+      });
+      ticking = false;
+    };
+
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(updateNavbar);
+        ticking = true;
+      }
+    });
+
+    navLinks.forEach((link) => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('href')?.substring(1);
+        const targetSection = document.getElementById(targetId);
+        if (targetSection) {
+          window.scrollTo({
+            top: targetSection.offsetTop - 80,
+            behavior: 'smooth'
+          });
+        }
+      });
+    });
+  }
+
+  setupScrollEffects() {
+    let ticking = false;
+    window.addEventListener('scroll', () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const heroImage = document.querySelector('.hero-image');
+          if (heroImage && window.pageYOffset < window.innerHeight) {
+            heroImage.style.transform = `translateY(${window.pageYOffset * -0.3}px)`;
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
+    });
+  }
+}
+
+// =============================================================================
+// ADMIN PANEL CLASS (for admin.html)
+// =============================================================================
+class AdminPanel {
+  constructor() {
+    this.init();
+  }
+
+  async init() {
+    // Check if we're on admin page
+    if (!window.location.pathname.includes('admin')) return;
+    
+    // Load current data from GitHub
+    await fetchDataFromGitHub();
+    
+    // Setup all admin forms
+    this.setupGitHubSettings();
+    this.setupHeroForm();
+    this.setupAboutForm();
+    this.setupActivitiesForm();
+    this.setupContactForm();
+    this.setupFooterForm();
+    
+    // Populate forms with current data
+    this.populateForms();
+  }
+
+  setupGitHubSettings() {
+    const tokenInput = document.getElementById('githubToken');
+    const saveBtn = document.getElementById('saveGithubSettings');
+    
+    if (tokenInput) {
+      tokenInput.value = localStorage.getItem('github-token') || '';
+    }
+    
+    if (saveBtn) {
+      saveBtn.addEventListener('click', () => {
+        const token = tokenInput?.value?.trim();
+        if (token) {
+          localStorage.setItem('github-token', token);
+          alert('GitHub token uložený!');
+        }
+      });
+    }
+  }
+
+  populateForms() {
+    // Hero
+    const heroEyebrow = document.getElementById('heroEyebrow');
+    const heroMain = document.getElementById('heroMainHeadline');
+    const heroSub = document.getElementById('heroSubHeadline');
+    const heroDesc = document.getElementById('heroDescription');
+    
+    if (heroEyebrow) heroEyebrow.value = siteData.hero?.eyebrow || '';
+    if (heroMain) heroMain.value = siteData.hero?.mainHeadline || '';
+    if (heroSub) heroSub.value = siteData.hero?.subHeadline || '';
+    if (heroDesc) heroDesc.value = siteData.hero?.description || '';
+    
+    // About
+    const aboutEyebrow = document.getElementById('aboutEyebrow');
+    const aboutTitle = document.getElementById('aboutTitle');
+    const aboutLead = document.getElementById('aboutLeadText');
+    const aboutP1 = document.getElementById('aboutParagraph1');
+    const aboutP2 = document.getElementById('aboutParagraph2');
+    const aboutImg = document.getElementById('aboutImage');
+    
+    if (aboutEyebrow) aboutEyebrow.value = siteData.about?.eyebrow || '';
+    if (aboutTitle) aboutTitle.value = siteData.about?.title || '';
+    if (aboutLead) aboutLead.value = siteData.about?.lead || '';
+    if (aboutP1) aboutP1.value = siteData.about?.paragraph1 || '';
+    if (aboutP2) aboutP2.value = siteData.about?.paragraph2 || '';
+    if (aboutImg) aboutImg.value = siteData.about?.image || '';
+    
+    // Contact
+    const contactAddr = document.getElementById('contactAddress');
+    const contactPhone = document.getElementById('contactPhone');
+    const contactEmail = document.getElementById('contactEmail');
+    
+    if (contactAddr) contactAddr.value = siteData.contact?.address || '';
+    if (contactPhone) contactPhone.value = siteData.contact?.phone || '';
+    if (contactEmail) contactEmail.value = siteData.contact?.email || '';
+    
+    // Footer
+    const footerText = document.getElementById('footerText');
+    if (footerText) footerText.value = siteData.footer || '';
+    
+    // Activities list
+    this.renderActivitiesList();
+  }
+
+  setupHeroForm() {
+    const form = document.getElementById('heroEditForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const eyebrow = document.getElementById('heroEyebrow')?.value?.trim() || '';
+      const mainHeadline = document.getElementById('heroMainHeadline')?.value?.trim() || '';
+      const subHeadline = document.getElementById('heroSubHeadline')?.value?.trim() || '';
+      const description = document.getElementById('heroDescription')?.value?.trim() || '';
+      
+      // Handle image upload
+      const fileInput = document.getElementById('heroBackgroundImage');
+      let backgroundImage = siteData.hero?.backgroundImage || '';
+      
+      if (fileInput?.files?.[0]) {
+        backgroundImage = await this.fileToDataUrl(fileInput.files[0]);
+      }
+
+      siteData.hero = { eyebrow, mainHeadline, subHeadline, description, backgroundImage };
+      
+      const success = await saveDataToGitHub(siteData);
+      if (success) {
+        alert('Hero sekcia uložená na GitHub!');
+        applyHeroSection(siteData.hero);
+      }
+    });
+  }
+
+  setupAboutForm() {
+    const form = document.getElementById('aboutEditForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      siteData.about = {
+        eyebrow: document.getElementById('aboutEyebrow')?.value?.trim() || '',
+        title: document.getElementById('aboutTitle')?.value?.trim() || '',
+        lead: document.getElementById('aboutLeadText')?.value?.trim() || '',
+        paragraph1: document.getElementById('aboutParagraph1')?.value?.trim() || '',
+        paragraph2: document.getElementById('aboutParagraph2')?.value?.trim() || '',
+        image: document.getElementById('aboutImage')?.value?.trim() || ''
+      };
+      
+      const success = await saveDataToGitHub(siteData);
+      if (success) {
+        alert('O nás sekcia uložená na GitHub!');
+        applyAboutSection(siteData.about);
+      }
+    });
+  }
+
+  setupActivitiesForm() {
+    const form = document.getElementById('addActivityForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const title = document.getElementById('activityTitle')?.value?.trim() || '';
+      const description = document.getElementById('activityDescription')?.value?.trim() || '';
+      const category = document.getElementById('activityCategory')?.value?.trim() || '';
+      const impact = document.getElementById('activityImpact')?.value?.trim() || '';
+      
+      if (!title || !description) {
+        alert('Názov a popis sú povinné!');
+        return;
+      }
+
+      // Handle image
+      const fileInput = document.getElementById('activityImage');
+      let image = '';
+      if (fileInput?.files?.[0]) {
+        image = await this.fileToDataUrl(fileInput.files[0]);
+      }
+
+      siteData.activities = siteData.activities || [];
+      siteData.activities.unshift({ title, description, category, impact, image });
+      
+      const success = await saveDataToGitHub(siteData);
+      if (success) {
+        alert('Aktivita pridaná na GitHub!');
+        form.reset();
+        this.renderActivitiesList();
+        renderActivities();
+      }
+    });
+  }
+
+  renderActivitiesList() {
+    const container = document.getElementById('activityList');
+    if (!container) return;
+
+    const activities = siteData.activities || [];
+    
+    if (activities.length === 0) {
+      container.innerHTML = '<em>Žiadne aktivity.</em>';
+      return;
+    }
+
+    container.innerHTML = activities.map((activity, idx) => `
+      <div style="border-bottom:1px solid #eee;padding:12px 0;display:flex;gap:1rem;align-items:center;">
+        ${activity.image ? `<img src="${activity.image}" alt="${activity.title}" style="max-width:80px;max-height:60px;object-fit:cover;border-radius:6px;">` : ''}
+        <div style="flex:1;">
+          <strong>${activity.title}</strong><br>
+          <small>${activity.category || ''} • ${activity.impact || ''}</small>
+          <p style="margin:4px 0 0;font-size:0.9em;color:#666;">${(activity.description || '').substring(0, 100)}...</p>
+        </div>
+        <button type="button" class="btn btn-danger delete-activity-btn" data-idx="${idx}">Vymazať</button>
+      </div>
+    `).join('');
+
+    // Attach delete handlers
+    container.querySelectorAll('.delete-activity-btn').forEach(btn => {
+      btn.addEventListener('click', async () => {
+        const idx = parseInt(btn.dataset.idx);
+        if (confirm('Naozaj vymazať túto aktivitu?')) {
+          siteData.activities.splice(idx, 1);
+          const success = await saveDataToGitHub(siteData);
+          if (success) {
+            this.renderActivitiesList();
+            renderActivities();
+          }
+        }
+      });
+    });
+  }
+
+  setupContactForm() {
+    const form = document.getElementById('contactEditForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      siteData.contact = {
+        address: document.getElementById('contactAddress')?.value || '',
+        phone: document.getElementById('contactPhone')?.value?.trim() || '',
+        email: document.getElementById('contactEmail')?.value?.trim() || ''
+      };
+      
+      const success = await saveDataToGitHub(siteData);
+      if (success) {
+        alert('Kontaktné údaje uložené na GitHub!');
+        applyContactInfo(siteData.contact);
+      }
+    });
+  }
+
+  setupFooterForm() {
+    const form = document.getElementById('footerEditForm');
+    if (!form) return;
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      siteData.footer = document.getElementById('footerText')?.value || '';
+      
+      const success = await saveDataToGitHub(siteData);
+      if (success) {
+        alert('Päta uložená na GitHub!');
+        applyFooterText(siteData.footer);
+      }
+    });
+  }
+
+  fileToDataUrl(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.onerror = () => reject(new Error('Nepodarilo sa načítať súbor'));
+      reader.readAsDataURL(file);
+    });
+  }
+}
+
+// =============================================================================
+// INITIALIZE ON DOM LOAD
+// =============================================================================
+document.addEventListener('DOMContentLoaded', () => {
+  // Check which page we're on
+  const isAdmin = window.location.pathname.includes('admin');
+  
+  if (isAdmin) {
+    console.log('🔧 Initializing Admin Panel...');
+    new AdminPanel();
+  } else {
+    console.log('🏔️ Initializing Mountain App...');
+    new ElegantMountainApp();
+  }
+});
