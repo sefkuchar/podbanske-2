@@ -1,5 +1,11 @@
 {
-  "hero": {},
+  "hero": {
+    "eyebrow": "aadasdas",
+    "mainHeadline": "dadasfafaf",
+    "subHeadline": "afafasfsaf",
+    "description": "safasfasfasf",
+    "backgroundImage": ""
+  },
   "about": {
     "eyebrow": "",
     "title": "",
