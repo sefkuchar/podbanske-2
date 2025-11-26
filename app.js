@@ -1,30 +1,40 @@
-
 // ---------------------------------
 // Main website app rendering and synchronization
 // ---------------------------------
 class ElegantMountainApp {
     constructor() {
+      // Ensure we always have a data object
+      this.data = {};
       // Always load remote data first; do not seed localStorage with defaults
       this.start();
     }
 
     // Ensure remote data is loaded before initializing the app
     async start() {
-      await this.loadDataFromFile();
+      try {
+        await this.loadDataFromFile();
+      } catch (err) {
+        console.error('Error loading remote data in start():', err);
+        this.data = this.data || {};
+      }
       this.init();
     }
 
     // Load data from data.json file
     async loadDataFromFile() {
       try {
-        const response = await fetch('https://sefkuchar.github.io/podbanske-2/data.json?t=' + Date.now());
+        const url = 'https://sefkuchar.github.io/podbanske-2/data.json?t=' + Date.now();
+        console.log('🔎 Fetching remote data from', url);
+        const response = await fetch(url);
 
- // Cache bust
+        // Cache bust
         if (response.ok) {
           const data = await response.json();
-          console.log('✅ Loaded data from data.json');
-          
-          // Save to localStorage so existing code works
+          console.log('✅ Loaded data from data.json', data);
+          // make fetched data available to other methods
+          this.data = data || {};
+
+          // Save to localStorage so existing code works (only when present)
           if (data.hero && Object.keys(data.hero).length) {
             localStorage.setItem('heroSection', JSON.stringify(data.hero));
           }
@@ -49,28 +59,35 @@ class ElegantMountainApp {
           if (data.contact && Object.keys(data.contact).length) {
             localStorage.setItem('contactInfo', JSON.stringify(data.contact));
           }
-          if (data.footer) {
-            localStorage.setItem('footerText', JSON.stringify(data.footer));
+          // store footer as plain string to match applyFooterText/load logic
+          if (typeof data.footer !== 'undefined') {
+            localStorage.setItem('footerText', data.footer);
           }
+        } else {
+          console.warn('⚠️ Fetch responded with status', response.status, response.statusText);
+          // keep this.data as-is (likely empty) so renders won't throw
+          this.data = this.data || {};
         }
       } catch (err) {
-        console.log('📁 data.json not found or error loading, using localStorage/defaults');
+        console.error('📁 data.json not found or error loading:', err);
+        // ensure this.data exists so later code is safe
+        this.data = this.data || {};
       }
     }
 
     init() {
       this.setupNavigation();
       this.setupScrollEffects();
-  this.renderActivities();
-  // history/nature/rules/magic are global functions (renderers), call them directly
-  renderHistory();
-  renderNature();
-  renderRules();
-  renderMagic();
+      this.renderActivities();
+      // history/nature/rules/magic are global functions (renderers), call them directly
+      renderHistory();
+      renderNature();
+      renderRules();
+      renderMagic();
       this.setupContactForm();
-  
+
       this.loadAndApplyAllSections();
-  
+
       this.initializeAnimations();
       this.setupLocalStorageListener();
       // When the tab/window regains focus, re-load sections from localStorage.
@@ -82,7 +99,7 @@ class ElegantMountainApp {
           console.error('Error reloading sections on focus', err);
         }
       });
-      
+
       // Auto-refresh from data.json every 30 seconds (for multi-computer sync)
       setInterval(() => {
         this.loadDataFromFile().then(() => {
@@ -92,16 +109,19 @@ class ElegantMountainApp {
           renderNature();
           renderRules();
           renderMagic();
+        }).catch(err => {
+          console.error('Auto-refresh failed:', err);
         });
       }, 30000); // 30 seconds
     }
-  
+
     setupNavigation() {
       const navbar = document.getElementById("mainNav");
       const navLinks = document.querySelectorAll(".nav-link");
       const sections = document.querySelectorAll("section[id]");
       let ticking = false;
       const updateNavbar = () => {
+        if (!navbar) { ticking = false; return; }
         if (window.scrollY > 100) {
           navbar.classList.add("scrolled");
         } else {
@@ -143,7 +163,7 @@ class ElegantMountainApp {
         });
       });
     }
-  
+
     setupScrollEffects() {
       let ticking = false;
       const updateParallax = () => {
@@ -162,11 +182,11 @@ class ElegantMountainApp {
         }
       });
     }
-  
+
     renderActivities() {
       const activitiesGrid = document.getElementById("activitiesGrid");
       if (!activitiesGrid) return;
-      
+
       // Update section header with custom text
       try {
         const headerData = JSON.parse(localStorage.getItem("activitiesHeader") || "{}");
@@ -184,7 +204,7 @@ class ElegantMountainApp {
       } catch (err) {
         console.error('Error updating activities header:', err);
       }
-      
+
       // Load all activities from localStorage
       let activities = [];
       try {
@@ -258,7 +278,7 @@ class ElegantMountainApp {
         if (e.target === modalOverlay) modal.style.display = "none";
       };
     }
-  
+
     renderEvents() {
       const eventsTimeline = document.getElementById("eventsTimeline");
       if (!eventsTimeline) return;
@@ -266,7 +286,8 @@ class ElegantMountainApp {
       try {
         adminEvents = JSON.parse(localStorage.getItem("adminEvents") || "[]");
       } catch {}
-      const allEvents = [...adminEvents, ...this.data.events];
+      const remoteEvents = (this.data && Array.isArray(this.data.events)) ? this.data.events : [];
+      const allEvents = [...adminEvents, ...remoteEvents];
       eventsTimeline.innerHTML = allEvents
         .map(
           (event, idx) => `
@@ -332,11 +353,16 @@ class ElegantMountainApp {
         if (e.target === modalOverlay) modal.style.display = "none";
       };
     }
-  
+
     renderTeam() {
       const teamGrid = document.getElementById("teamGrid");
       if (!teamGrid) return;
-      let teamData = JSON.parse(localStorage.getItem("teamMembers")) || this.data.team;
+      let teamData = [];
+      try {
+        teamData = JSON.parse(localStorage.getItem("teamMembers")) || (this.data && this.data.team) || [];
+      } catch {
+        teamData = (this.data && this.data.team) || [];
+      }
       teamGrid.innerHTML = teamData
         .map(
           (member) => `
@@ -357,27 +383,27 @@ class ElegantMountainApp {
         )
         .join("");
     }
-  
+
     setupContactForm() {
       // Your contact form code if any
     }
-  
+
     initializeAnimations() {
       // Your animation init code if any
     }
-  
+
     setupLocalStorageListener() {
       window.addEventListener("storage", (event) => {
         if (!event.key) return;
-        
+
         // Handle force refresh trigger from admin
         if (event.key === '_refresh_trigger') {
           console.log('🔄 Refresh triggered from admin panel');
           window.location.reload();
           return;
         }
-        
-  try {
+
+        try {
           switch (event.key) {
             case "heroSection":
               applyHeroSection(JSON.parse(event.newValue || '{}'));
@@ -418,7 +444,7 @@ class ElegantMountainApp {
         }
       });
     }
-  
+
     loadAndApplyAllSections() {
       ['heroSection', 'aboutSection', 'adminActivities', 'adminEvents', 'historySection', 'natureSection', 'rulesSection', 'magicSection', 'contactInfo'].forEach((key) => {
         let data = localStorage.getItem(key);
@@ -441,12 +467,27 @@ class ElegantMountainApp {
         }
       });
 
-      // footerText is stored as a plain string, not JSON
-      const footerText = localStorage.getItem('footerText');
-      if (footerText) applyFooterText(footerText);
+      // footerText may be stored as plain string or JSON-encoded string; handle both
+      let footerText = localStorage.getItem('footerText');
+      if (footerText) {
+        try {
+          const parsed = JSON.parse(footerText);
+          // if parsed is object/array, try to find text field, else fallback to original string
+          if (typeof parsed === 'string') {
+            applyFooterText(parsed);
+          } else if (parsed && parsed.text) {
+            applyFooterText(parsed.text);
+          } else {
+            // use original raw value when parsed isn't useful
+            applyFooterText(footerText);
+          }
+        } catch {
+          applyFooterText(footerText);
+        }
+      }
     }
   }
-  
+
   function applyHeroSection(data) {
     const eyebrow = document.querySelector(".hero-eyebrow");
     if (eyebrow) eyebrow.textContent = data.eyebrow || "";
@@ -465,7 +506,7 @@ class ElegantMountainApp {
       heroImage.style.backgroundSize = "cover";
     }
   }
-  
+
   function applyAboutSection(data) {
     // Update section header
     const aboutSection = document.querySelector("#about");
@@ -480,7 +521,7 @@ class ElegantMountainApp {
         if (description) description.textContent = data.description || "aa";
       }
     }
-    
+
     const leadEl = document.querySelector(".lead-text");
     if(leadEl) leadEl.textContent = data.lead || '';
     const paragraphs = document.querySelectorAll(".about-narrative p");
@@ -499,12 +540,12 @@ class ElegantMountainApp {
     const imgEl = document.querySelector(".about-visual img");
     if(imgEl) imgEl.src = data.image || '';
   }
-  
-  
+
+
   function applyImpactMetrics(metrics) {
     const metricsGrid = document.querySelector(".metrics-grid");
     if (!metricsGrid) return;
-  
+
     metricsGrid.innerHTML = metrics
       .map(
         (m) => `
@@ -515,11 +556,11 @@ class ElegantMountainApp {
       )
       .join("");
   }
-  
+
   function applyTeamMembers(team) {
     const teamGrid = document.getElementById("teamGrid");
     if (!teamGrid) return;
-  
+
     teamGrid.innerHTML = team
       .map(
         (m) => `
@@ -539,7 +580,7 @@ class ElegantMountainApp {
       )
       .join("");
   }
-  
+
   function applyContactInfo(data) {
     const contactSection = document.getElementById("contact");
     if (!contactSection) return;
@@ -550,7 +591,7 @@ class ElegantMountainApp {
       contactMethods[2].textContent = data.email || "";
     }
   }
-  
+
   function applyFooterText(text) {
     const footerP = document.querySelector(".footer-bottom p");
     if (footerP) footerP.textContent = text || "";
@@ -560,11 +601,11 @@ class ElegantMountainApp {
   function renderHistory() {
     const historyContent = document.getElementById("historyContent");
     if (!historyContent) return;
-    
+
     try {
       const historyData = JSON.parse(localStorage.getItem("historySection")) || {};
       const subsections = historyData.subsections || [];
-      
+
       // Update section header
       const historySection = document.getElementById("history");
       if (historySection) {
@@ -577,12 +618,12 @@ class ElegantMountainApp {
           `;
         }
       }
-      
+
       historyContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
             <div class="content-body">${historyData.content || ""}</div>
-            
+
             ${subsections.length > 0 ? `
               <div class="content-subsections">
                 ${subsections.map(sub => `
@@ -609,11 +650,11 @@ class ElegantMountainApp {
   function renderNature() {
     const natureContent = document.getElementById("natureContent");
     if (!natureContent) return;
-    
+
     try {
       const natureData = JSON.parse(localStorage.getItem("natureSection")) || {};
       const subsections = natureData.subsections || [];
-      
+
       // Update section header
       const natureSection = document.getElementById("nature");
       if (natureSection) {
@@ -626,12 +667,12 @@ class ElegantMountainApp {
           `;
         }
       }
-      
+
       natureContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
             <div class="content-body">${natureData.content || ""}</div>
-            
+
             ${subsections.length > 0 ? `
               <div class="content-subsections">
                 ${subsections.map(sub => `
@@ -658,11 +699,11 @@ class ElegantMountainApp {
   function renderRules() {
     const rulesContent = document.getElementById("rulesContent");
     if (!rulesContent) return;
-    
+
     try {
       const rulesData = JSON.parse(localStorage.getItem("rulesSection")) || {};
       const subsections = rulesData.subsections || [];
-      
+
       // Update section header
       const rulesSection = document.getElementById("rules");
       if (rulesSection) {
@@ -675,12 +716,12 @@ class ElegantMountainApp {
           `;
         }
       }
-      
+
       rulesContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
             <div class="content-body">${rulesData.content || ""}</div>
-            
+
             ${subsections.length > 0 ? `
               <div class="content-subsections">
                 ${subsections.map(sub => `
@@ -702,12 +743,12 @@ class ElegantMountainApp {
   function renderMagic() {
     const magicContent = document.getElementById("magicContent");
     if (!magicContent) return;
-    
+
     try {
       const magicData = JSON.parse(localStorage.getItem("magicSection")) || {};
       const images = magicData.images || [];
       const subsections = magicData.subsections || [];
-      
+
       // Update section header
       const magicSection = document.getElementById("magic");
       if (magicSection) {
@@ -720,12 +761,12 @@ class ElegantMountainApp {
           `;
         }
       }
-      
+
       magicContent.innerHTML = `
         <div class="content-layout">
           <div class="content-text">
             <div class="content-body">${magicData.content || ""}</div>
-            
+
             ${subsections.length > 0 ? `
               <div class="content-subsections">
                 ${subsections.map(sub => `
@@ -753,7 +794,7 @@ class ElegantMountainApp {
       console.error("Error rendering magic section:", err);
     }
   }
-  
+
   // ---------------------------------
   // Admin panel functionality
   // ---------------------------------
@@ -761,13 +802,13 @@ class ElegantMountainApp {
     constructor() {
       this.setupAdmin();
     }
-  
+
     setupAdmin() {
       if (window.location.pathname.includes("admin.html")) {
         this.initAdminPage();
       }
     }
-  
+
     initAdminPage() {
       const loginForm = document.getElementById("adminLoginForm");
       if (loginForm) {
@@ -777,18 +818,18 @@ class ElegantMountainApp {
         });
       }
     }
-  
+
     handleLogin() {
       const username = document.getElementById("adminUsername")?.value.trim();
       const password = document.getElementById("adminPassword")?.value.trim();
-  
+
       if (username === "admin" && password === "podban2024") {
         this.showAdminDashboard();
       } else {
         this.showLoginError();
       }
     }
-  
+
     showLoginError() {
       const errorDiv = document.getElementById("adminLoginError");
       if (errorDiv) {
@@ -799,7 +840,7 @@ class ElegantMountainApp {
         }, 3000);
       }
     }
-  
+
     showAdminDashboard() {
       const loginScreen = document.getElementById("adminLoginScreen");
       const dashboard = document.getElementById("adminDashboard");
@@ -815,7 +856,7 @@ class ElegantMountainApp {
       // Initialize admin management UI and handlers
       this.initAdminManagement();
     }
-  
+
     initAdminManagement() {
       this.setupNavigationManagement();
       this.setupHeroSectionManagement();
@@ -825,7 +866,7 @@ class ElegantMountainApp {
       this.setupContactManagement();
       this.setupFooterManagement();
     }
-  
+
     // Navigation management - example
     setupNavigationManagement() {
       let navData =
@@ -839,7 +880,7 @@ class ElegantMountainApp {
         ];
       const navEditForm = document.getElementById("navEditForm");
       const navList = document.getElementById("navList");
-  
+
       function renderNavItems() {
         if (!navList) return;
         navList.innerHTML = navData
@@ -877,7 +918,7 @@ class ElegantMountainApp {
           });
         });
       }
-  
+
       function updatePageNavigation() {
         const navMenu = document.getElementById("navMenu");
         if (!navMenu) return;
@@ -885,13 +926,13 @@ class ElegantMountainApp {
           .map((item) => `<li><a href="${item.href}" class="nav-link">${item.label}</a></li>`)
           .join("");
       }
-  
+
       function saveAndRender() {
         localStorage.setItem("siteNavigation", JSON.stringify(navData));
         renderNavItems();
         updatePageNavigation();
       }
-  
+
       const defaultNavSubmit = (e) => {
         e.preventDefault();
         navData.push({
@@ -901,17 +942,17 @@ class ElegantMountainApp {
         saveAndRender();
         navEditForm.reset();
       };
-  
+
       navEditForm.onsubmit = defaultNavSubmit;
       renderNavItems();
       updatePageNavigation();
     }
-  
+
     // Hero Section management with image upload
     setupHeroSectionManagement() {
       const form = document.getElementById("heroEditForm");
       if (!form) return;
-  
+
       let heroData = JSON.parse(localStorage.getItem("heroSection")) || {
         eyebrow: "",
         mainHeadline: "",
@@ -919,27 +960,27 @@ class ElegantMountainApp {
         description: "",
         backgroundImage: "",
       };
-  
+
       ["heroEyebrow", "heroMainHeadline", "heroSubHeadline", "heroDescription"].forEach(
         (id) => {
           const el = document.getElementById(id);
           if (el) el.value = heroData[id.replace("hero", "").replace(/^\w/, (c) => c.toLowerCase())];
         }
       );
-  
+
       // File input cannot have value set programmatically, so no setting for 'heroBackgroundImage'
-  
+
       form.addEventListener("submit", async (e) => {
         e.preventDefault();
-  
+
         const eyebrow = document.getElementById("heroEyebrow").value.trim();
         const mainHeadline = document.getElementById("heroMainHeadline").value.trim();
         const subHeadline = document.getElementById("heroSubHeadline").value.trim();
         const description = document.getElementById("heroDescription").value.trim();
-  
+
         const fileInput = document.getElementById("heroBackgroundImage");
         let backgroundImage = heroData.backgroundImage;
-  
+
         if (fileInput.files && fileInput.files[0]) {
           try {
             backgroundImage = await new Promise((resolve, reject) => {
@@ -953,7 +994,7 @@ class ElegantMountainApp {
             return;
           }
         }
-  
+
         heroData = {
           eyebrow,
           mainHeadline,
@@ -961,32 +1002,32 @@ class ElegantMountainApp {
           description,
           backgroundImage,
         };
-  
+
         localStorage.setItem("heroSection", JSON.stringify(heroData));
         alert("Zmeny uložené");
-  
+
         applyHeroSection(heroData);
       });
-  
+
       applyHeroSection(heroData);
     }
-  
+
     setupAboutSectionManagement() {
       const form = document.getElementById("aboutEditForm");
       if (!form) return;
-  
+
       let aboutData = JSON.parse(localStorage.getItem("aboutSection")) || {
         lead: "",
         paragraph1: "",
         paragraph2: "",
         image: "",
       };
-  
+
       document.getElementById("aboutLeadText").value = aboutData.lead;
       document.getElementById("aboutParagraph1").value = aboutData.paragraph1;
       document.getElementById("aboutParagraph2").value = aboutData.paragraph2;
       document.getElementById("aboutImage").value = aboutData.image;
-  
+
       form.addEventListener("submit", (e) => {
         e.preventDefault();
         aboutData = {
@@ -999,19 +1040,19 @@ class ElegantMountainApp {
         alert("Zmeny uložené");
       });
     }
-  
+
     // Activities management with image upload from file
     async handleActivityFormSubmit(event) {
       event.preventDefault();
-  
+
       const title = document.getElementById("activityTitle").value.trim();
       const description = document.getElementById("activityDescription").value.trim();
       const category = document.getElementById("activityCategory").value.trim();
       const impact = document.getElementById("activityImpact").value.trim();
-  
+
       const imageInput = document.getElementById("activityImage");
       let imageDataUrl = "";
-  
+
       if (imageInput.files && imageInput.files[0]) {
         try {
           imageDataUrl = await new Promise((resolve, reject) => {
@@ -1025,12 +1066,12 @@ class ElegantMountainApp {
           return;
         }
       }
-  
+
       if (!title || !description) {
         alert("Názov a popis sú povinné.");
         return;
       }
-  
+
       const activities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
       activities.unshift({
         title,
@@ -1039,20 +1080,20 @@ class ElegantMountainApp {
         impact,
         image: imageDataUrl,
       });
-  
+
       localStorage.setItem("adminActivities", JSON.stringify(activities));
       alert("Aktivita bola pridaná.");
       event.target.reset();
       this.renderActivities();
     }
-  
+
     setupActivitiesManagement() {
       const form = document.getElementById("addActivityForm");
       if (!form) return;
       form.addEventListener("submit", this.handleActivityFormSubmit.bind(this));
       this.renderActivities();
     }
-  
+
     renderActivities() {
       const container = document.getElementById("activityList");
       if (!container) return;
@@ -1075,9 +1116,7 @@ class ElegantMountainApp {
             <small>${activity.category || ""} • ${activity.impact || ""}</small>
             <p style="margin:0;">${activity.description}</p>
           </div>
-          <button onclick="ElegantAdminPanel.deleteActivity(event)" data-title="${
-            activity.title
-          }" class="btn btn-danger" style="margin-left:auto;">Vymazať</button>
+          <button onclick="ElegantAdminPanel.deleteActivity(event)" data-title="${activity.title}" class="btn btn-danger" style="margin-left:auto;">Vymazať</button>
         </div>
       `
         )
@@ -1088,7 +1127,7 @@ class ElegantMountainApp {
         );
       });
     }
-  
+
     static deleteActivity(event) {
       const title = event.target.dataset.title;
       const activities = JSON.parse(localStorage.getItem("adminActivities") || "[]");
@@ -1098,9 +1137,9 @@ class ElegantMountainApp {
       const panel = new ElegantAdminPanel();
       panel.renderActivities();
     }
-  
+
     // Events management (similar pattern omitted here...)
-  
+
     setupContactManagement() {
       const form = document.getElementById("contactEditForm");
       if (!form) return;
@@ -1124,7 +1163,7 @@ class ElegantMountainApp {
         alert("Zmeny uložené");
       });
     }
-  
+
     setupFooterManagement() {
       const form = document.getElementById("footerEditForm");
       if (!form) return;
@@ -1140,13 +1179,11 @@ class ElegantMountainApp {
       });
     }
   }
-  
-  
+
+
   // Start apps and admin panel on DOM load
   document.addEventListener("DOMContentLoaded", () => {
     new ElegantMountainApp();
     // DISABLED: old admin panel - now using ADMIN.HTML instead
     // new ElegantAdminPanel();
   });
-  
-
