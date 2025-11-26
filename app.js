@@ -4,112 +4,13 @@
 // ---------------------------------
 class ElegantMountainApp {
     constructor() {
-      // Default example data - only used to initialize localStorage if empty
-      const defaultData = {
-        activities: [
-          {
-            id: 1,
-            title: "Ochrana horského ekosystému",
-            description:
-              "Naša iniciatíva sa zameriava na obnovu a ochranu pôvodných rastlinných a živočíšnych druhov v Tatrách. V spolupráci s odborníkmi a dobrovoľníkmi monitorujeme ohrozené biotopy, vysádzame pôvodné stromy a čistíme horské chodníky od invazívnych rastlín. Výsledkom je zdravší ekosystém a lepšie podmienky pre turistov aj miestnu faunu.",
-            category: "Environment",
-            impact: "15 km obnovených chodníkov, 2 nové biotopy zachránené",
-            image:
-              "https://images.unsplash.com/photo-1506744038136-46273834b3fb?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: 2,
-            title: "Kultúrne dedičstvo regiónu",
-            description:
-              "Organizujeme folklórne festivaly, remeselné trhy a workshopy, kde miestni majstri odovzdávajú svoje zručnosti mladším generáciám. Vydali sme knihu o histórii Podbanského a digitalizovali archívne fotografie, aby tradície žili aj v digitálnom veku.",
-            category: "Heritage",
-            impact: "12 kultúrnych programov ročne, 1 000+ návštevníkov",
-            image:
-              "https://images.unsplash.com/photo-1464983953574-0892a716854b?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: 3,
-            title: "Komunitný rozvoj",
-            description:
-              "Spájame generácie prostredníctvom komunitných záhrad, spoločných brigád a vzdelávacích seminárov. Podporujeme mladé rodiny, seniorov aj podnikateľov, aby sa každý cítil v Podbanskom doma. Vďaka grantom sme zrekonštruovali detské ihrisko a založili komunitnú knižnicu.",
-            category: "Community",
-            impact: "Podpora 120 obyvateľov, 3 nové komunitné projekty",
-            image:
-              "https://images.unsplash.com/photo-1519125323398-675f0ddb6308?auto=format&fit=crop&w=800&q=80",
-          },
-          {
-            id: 4,
-            title: "Udržateľný turizmus",
-            description:
-              "Vytvorili sme sieť ekologických turistických trás s informačnými tabuľami o prírode a histórii regiónu. Spolupracujeme s miestnymi podnikmi na zavádzaní zero waste opatrení a propagujeme zodpovedné správanie návštevníkov. Naše podujatia sú prístupné aj pre rodiny s deťmi a osoby so zníženou pohyblivosťou.",
-            category: "Sustainability",
-            impact: "Zero waste program, 5 nových trás, 500+ turistov ročne",
-            image:
-              "https://images.unsplash.com/photo-1500534314209-a25ddb2bd429?auto=format&fit=crop&w=800&q=80",
-          },
-        ],
-        events: [
-          {
-            id: 1,
-            title: "Zimná gala večera",
-            date: "15. december 2024",
-            place: "",
-            description:
-              "Prestižne podujatie s degustáciou miestnych špecialít, kultúrnym programom a prezentáciou výsledkov našej práce za rok 2024.",
-          },
-          {
-            id: 2,
-            title: "Jarný festival prírody",
-            date: "Apríl 2025",
-            place: "",
-            description:
-              "Medzinárodná konferencia o ochrane horských ekosystémov spojená s praktickými workshopmi a terénnou prácou.",
-          },
-        ],
-        team: [
-          {
-            name: "Dr. Elena Kováčová",
-            position: "Predsedníčka",
-            credentials:
-              "PhD. v oblasti environmentálnych vied, špecializácia na horské ekosystémy",
-            experience:
-              "15 rokov v ochrane prírody Tatier. Vedie výskumné projekty, publikuje v medzinárodných časopisoch a je aktívnou členkou viacerých environmentálnych organizácií.",
-            image: "https://randomuser.me/api/portraits/women/44.jpg",
-            initials: "EK",
-          },
-          {
-            name: "Ing. Matej Horák",
-            position: "Podpredseda",
-            credentials: "Ing. krajinnej architektúry, expert na udržateľný rozvoj",
-            experience:
-              "Špecialista na ekologické plánovanie a obnovu verejných priestorov. Venuje sa aj edukácii mládeže v oblasti ochrany prírody.",
-            image: "https://randomuser.me/api/portraits/men/32.jpg",
-            initials: "MH",
-          },
-          {
-            name: "Mgr. Lucia Bieliková",
-            position: "Projektová manažérka",
-            credentials: "Mgr. v oblasti kultúrneho dedičstva",
-            experience:
-              "Organizuje kultúrne podujatia, vedie folklórny súbor a je autorkou viacerých publikácií o histórii regiónu.",
-            image: "https://randomuser.me/api/portraits/women/65.jpg",
-            initials: "LB",
-          },
-        ],
-      };
-      // Initialize default activities in localStorage if none exist
-      try {
-        const storedActivities = localStorage.getItem('adminActivities');
-        if (!storedActivities || JSON.parse(storedActivities).length === 0) {
-          localStorage.setItem('adminActivities', JSON.stringify(defaultData.activities));
-        }
-      } catch (err) {
-        console.error('Error initializing default activities:', err);
-      }
-      
-      // Load data from data.json (GitHub workflow)
-      this.loadDataFromFile();
-      
+      // Always load remote data first; do not seed localStorage with defaults
+      this.start();
+    }
+
+    // Ensure remote data is loaded before initializing the app
+    async start() {
+      await this.loadDataFromFile();
       this.init();
     }
 
