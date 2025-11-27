@@ -32,7 +32,14 @@
     "title": "Naše aktivity",
     "description": "KAždý rok realizujeem projekty zamerané na zlepšenie infraštrutúry a zachovanie prírodného bohatstva Podbanského"
   },
-  "history": {},
+  "history": {
+    "eyebrow": "Historia",
+    "title": "historia",
+    "description": "historia 123 458 hsfkjfôksdhôsdhf",
+    "content": "historia 12345",
+    "subsections": [],
+    "image": ""
+  },
   "nature": {},
   "rules": {},
   "magic": {},
