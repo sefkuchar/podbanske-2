@@ -186,10 +186,48 @@ button.btn-danger:hover {
   opacity: 0;
   transition: opacity 0.4s ease;
   pointer-events: none;
+  max-width: 400px;
+  word-wrap: break-word;
 }
 .status-message.visible {
   opacity: 1;
   pointer-events: auto;
+}
+.status-message.success {
+  background: #10b981;
+}
+.status-message.error {
+  background: #ef4444;
+}
+.status-message.warning {
+  background: #f59e0b;
+}
+.status-message.info {
+  background: #3b82f6;
+}
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0,0,0,0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10000;
+}
+.loading-spinner {
+  border: 4px solid rgba(255,255,255,0.3);
+  border-top: 4px solid white;
+  border-radius: 50%;
+  width: 50px;
+  height: 50px;
+  animation: spin 1s linear infinite;
+}
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
 }
 .item-list {
   max-height: 250px;
@@ -205,6 +243,40 @@ label {
   margin-bottom: 0.3em;
   display: block;
 }
+.form-section {
+  margin-bottom: 1.5em;
+  padding: 1em;
+  background: #f8f9fa;
+  border-radius: var(--radius-lg);
+  border-left: 4px solid var(--accent-gold);
+}
+.form-section h3 {
+  margin-top: 0;
+}
+.button-group {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+  margin-top: 1rem;
+}
+.item-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75em;
+  border-bottom: 1px solid #eee;
+}
+.item-row:last-child {
+  border-bottom: none;
+}
+@media (max-width: 768px) {
+  .admin-section-layout {
+    grid-template-columns: 1fr;
+  }
+  body {
+    padding: 1rem;
+  }
+}
 </style>
 </head>
 <body>
@@ -212,6 +284,11 @@ label {
 <div class="admin-page">
   <!-- Status Notification -->
   <div id="statusMessage" class="status-message"></div>
+  
+  <!-- Loading Overlay -->
+  <div id="loadingOverlay" class="loading-overlay hidden">
+    <div class="loading-spinner"></div>
+  </div>
 
   <!-- LOGIN SCREEN -->
   <section id="adminLoginScreen">
@@ -553,10 +630,18 @@ label {
 (() => {
   const statusMessageEl = document.getElementById("statusMessage");
 
-  function notify(msg) {
+  function notify(msg, type = 'info') {
     statusMessageEl.textContent = msg;
-    statusMessageEl.classList.add("visible");
-    setTimeout(() => statusMessageEl.classList.remove("visible"), 3000);
+    statusMessageEl.className = 'status-message visible ' + type;
+    setTimeout(() => statusMessageEl.classList.remove("visible"), type === 'error' ? 5000 : 3000);
+  }
+
+  function showLoading() {
+    document.getElementById('loadingOverlay').classList.remove('hidden');
+  }
+
+  function hideLoading() {
+    document.getElementById('loadingOverlay').classList.add('hidden');
   }
 
   // Login Logic
@@ -578,15 +663,24 @@ label {
     return sessionStorage.getItem("loggedIn") === "true";
   }
 
-  loginForm.addEventListener("submit", e => {
+  loginForm.addEventListener("submit", async e => {
     e.preventDefault();
     const username = document.getElementById("adminUsername").value.trim();
     const password = document.getElementById("adminPassword").value.trim();
+    
     if (username === "admin" && password === "podban2024") {
-      sessionStorage.setItem("loggedIn", "true");
-      showDashboard();
-      loadAllDataToForms();
-      loginError.style.display = "none";
+      showLoading();
+      try {
+        sessionStorage.setItem("loggedIn", "true");
+        showDashboard();
+        await loadAllDataToForms();
+        loginError.style.display = "none";
+      } catch (err) {
+        console.error('Login initialization failed:', err);
+        notify('Prihlásenie úspešné, ale načítanie dát zlyhalo', 'warning');
+      } finally {
+        hideLoading();
+      }
     } else {
       loginError.textContent = "Nesprávne prihlasovacie údaje";
       loginError.style.display = "block";
@@ -650,31 +744,60 @@ label {
 
   async function fetchRemoteDataJson() {
     try {
+      if (!window.githubSync) {
+        throw new Error('GitHub sync modul nie je načítaný');
+      }
+      
       const file = await window.githubSync.getFile('data.json');
       if (!file || !file.content) {
         console.warn('data.json not found or empty');
-        notify('⚠️ data.json nenájdený - prihláste sa');
+        notify('⚠️ data.json nenájdený - najskôr nastavte GitHub Sync', 'warning');
         throw new Error('data.json not found');
       }
+      
       const decoded = decodeURIComponent(escape(atob(file.content)));
-      return JSON.parse(decoded);
+      const data = JSON.parse(decoded);
+      
+      // Validate data structure
+      if (typeof data !== 'object') {
+        throw new Error('Neplatný formát data.json');
+      }
+      
+      return data;
     } catch (e) {
       console.error('Fetch remote data.json failed', e);
-      notify('❌ Nepodarilo sa načítať data.json - skontrolujte prístup');
+      if (e.message.includes('401')) {
+        notify('❌ Neplatný GitHub token - skontrolujte nastavenie', 'error');
+      } else if (e.message.includes('404')) {
+        notify('❌ Súbor data.json neexistuje v repozitári', 'error');
+      } else {
+        notify('❌ Chyba pri načítaní: ' + e.message, 'error');
+      }
       throw e;
     }
   }
 
   async function saveData(key, value) {
-    notify('🔄 Ukladám na GitHub…');
-    const data = await fetchRemoteDataJson();
-    data[keyMapToFileField(key)] = value;
+    showLoading();
+    notify('🔄 Ukladám na GitHub…', 'info');
+    
     try {
-      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), `Update ${keyMapToFileField(key)} - ${new Date().toISOString()}`);
-      notify('✅ Uložené na GitHub');
+      const data = await fetchRemoteDataJson();
+      data[keyMapToFileField(key)] = value;
+      
+      await window.githubSync.updateFile(
+        'data.json', 
+        JSON.stringify(data, null, 2), 
+        `Update ${keyMapToFileField(key)} - ${new Date().toLocaleString('sk-SK')}`
+      );
+      
+      notify('✅ Úspešne uložené na GitHub', 'success');
     } catch (err) {
       console.error('GitHub update failed', err);
-      notify('❌ Chyba pri ukladaní: ' + err.message);
+      notify('❌ Chyba pri ukladaní: ' + err.message, 'error');
+      throw err;
+    } finally {
+      hideLoading();
     }
   }
 
@@ -793,14 +916,26 @@ label {
 
   heroForm.addEventListener("submit", async e => {
     e.preventDefault();
+    
+    const mainHeadline = document.getElementById("heroMainHeadline").value.trim();
+    if (!mainHeadline) {
+      notify('⚠️ Hlavný titulok je povinný', 'warning');
+      return;
+    }
+    
     const heroData = {
       eyebrow: document.getElementById("heroEyebrow").value.trim(),
-      mainHeadline: document.getElementById("heroMainHeadline").value.trim(),
+      mainHeadline: mainHeadline,
       subHeadline: document.getElementById("heroSubHeadline").value.trim(),
       description: document.getElementById("heroDescription").value.trim(),
       backgroundImage: heroImageHidden.value
     };
-    await saveData(KEYS.HERO, heroData);
+    
+    try {
+      await saveData(KEYS.HERO, heroData);
+    } catch (err) {
+      console.error('Hero save failed:', err);
+    }
   });
 
   // About Section Management
@@ -872,12 +1007,22 @@ label {
 
   aboutForm.addEventListener("submit", async e => {
     e.preventDefault();
+    
+    const title = document.getElementById("aboutTitle").value.trim();
+    const lead = document.getElementById("aboutLeadText").value.trim();
+    const content = document.getElementById("aboutContent").value.trim();
+    
+    if (!title || !lead || !content) {
+      notify('⚠️ Všetky povinné polia musia byť vyplnené', 'warning');
+      return;
+    }
+    
     const aboutData = {
       eyebrow: document.getElementById("aboutEyebrow").value.trim(),
-      title: document.getElementById("aboutTitle").value.trim(),
+      title: title,
       description: document.getElementById("aboutDescription").value.trim(),
-      lead: document.getElementById("aboutLeadText").value.trim(),
-      content: document.getElementById("aboutContent").value.trim(),
+      lead: lead,
+      content: content,
       image: document.getElementById("aboutImage").value
     };
     const contactData = {
@@ -885,16 +1030,27 @@ label {
       phone: document.getElementById("contactPhone").value.trim(),
       email: document.getElementById("contactEmail").value.trim()
     };
-    notify('🔄 Ukladám O nás + kontakt na GitHub…');
-    const data = await fetchRemoteDataJson();
-    data.about = aboutData;
-    data.contact = contactData;
+    
+    showLoading();
+    notify('🔄 Ukladám O nás + kontakt na GitHub…', 'info');
+    
     try {
-      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), `Update about+contact - ${new Date().toISOString()}`);
-      notify('✅ O nás + kontakt uložené na GitHub');
+      const data = await fetchRemoteDataJson();
+      data.about = aboutData;
+      data.contact = contactData;
+      
+      await window.githubSync.updateFile(
+        'data.json', 
+        JSON.stringify(data, null, 2), 
+        `Update about+contact - ${new Date().toLocaleString('sk-SK')}`
+      );
+      
+      notify('✅ O nás + kontakt uložené na GitHub', 'success');
     } catch (err) {
       console.error('Save about/contact failed', err);
-      notify('❌ Chyba pri ukladaní: ' + err.message);
+      notify('❌ Chyba pri ukladaní: ' + err.message, 'error');
+    } finally {
+      hideLoading();
     }
   });
 
@@ -1061,16 +1217,33 @@ label {
 
   // Delete History button
   document.getElementById("deleteHistoryBtn").addEventListener("click", async () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu História?")) {
+    const confirmText = "Naozaj chcete vymazať celú sekciu História?\n\nTáto akcia je nevratná!";
+    if (!confirm(confirmText)) return;
+    
+    showLoading();
+    try {
       const data = await fetchRemoteDataJson();
       delete data.history;
-      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete history section');
+      await window.githubSync.updateFile(
+        'data.json', 
+        JSON.stringify(data, null, 2), 
+        'Delete history section'
+      );
+      
+      document.getElementById("historyEyebrow").value = "";
       document.getElementById("historyTitle").value = "";
+      document.getElementById("historyDescription").value = "";
       document.getElementById("historyContent").value = "";
       document.getElementById("historyImage").value = "";
       historySubsections = [];
       renderHistorySubsections();
-      notify("Sekcia História bola vymazaná");
+      
+      notify("✅ Sekcia História bola vymazaná", 'success');
+    } catch (err) {
+      console.error('Delete history failed:', err);
+      notify('❌ Chyba pri mazaní: ' + err.message, 'error');
+    } finally {
+      hideLoading();
     }
   });
 
@@ -1145,16 +1318,33 @@ label {
 
   // Delete Nature button
   document.getElementById("deleteNatureBtn").addEventListener("click", async () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu Príroda?")) {
+    const confirmText = "Naozaj chcete vymazať celú sekciu Príroda?\n\nTáto akcia je nevratná!";
+    if (!confirm(confirmText)) return;
+    
+    showLoading();
+    try {
       const data = await fetchRemoteDataJson();
       delete data.nature;
-      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete nature section');
+      await window.githubSync.updateFile(
+        'data.json', 
+        JSON.stringify(data, null, 2), 
+        'Delete nature section'
+      );
+      
+      document.getElementById("natureEyebrow").value = "";
       document.getElementById("natureTitle").value = "";
+      document.getElementById("natureDescription").value = "";
       document.getElementById("natureContent").value = "";
       document.getElementById("natureImage").value = "";
       natureSubsections = [];
       renderNatureSubsections();
-      notify("Sekcia Príroda bola vymazaná");
+      
+      notify("✅ Sekcia Príroda bola vymazaná", 'success');
+    } catch (err) {
+      console.error('Delete nature failed:', err);
+      notify('❌ Chyba pri mazaní: ' + err.message, 'error');
+    } finally {
+      hideLoading();
     }
   });
 
@@ -1214,15 +1404,32 @@ label {
 
   // Delete Rules button
   document.getElementById("deleteRulesBtn").addEventListener("click", async () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu Pravidlá?")) {
+    const confirmText = "Naozaj chcete vymazať celú sekciu Pravidlá?\n\nTáto akcia je nevratná!";
+    if (!confirm(confirmText)) return;
+    
+    showLoading();
+    try {
       const data = await fetchRemoteDataJson();
       delete data.rules;
-      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete rules section');
+      await window.githubSync.updateFile(
+        'data.json', 
+        JSON.stringify(data, null, 2), 
+        'Delete rules section'
+      );
+      
+      document.getElementById("rulesEyebrow").value = "";
       document.getElementById("rulesTitle").value = "";
+      document.getElementById("rulesDescription").value = "";
       document.getElementById("rulesContent").value = "";
       rulesSubsections = [];
       renderRulesSubsections();
-      notify("Sekcia Pravidlá bola vymazaná");
+      
+      notify("✅ Sekcia Pravidlá bola vymazaná", 'success');
+    } catch (err) {
+      console.error('Delete rules failed:', err);
+      notify('❌ Chyba pri mazaní: ' + err.message, 'error');
+    } finally {
+      hideLoading();
     }
   });
 
@@ -1337,17 +1544,34 @@ label {
 
   // Delete Magic button
   document.getElementById("deleteMagicBtn").addEventListener("click", async () => {
-    if (confirm("Naozaj chcete vymazať celú sekciu Magické Podbanské?")) {
+    const confirmText = "Naozaj chcete vymazať celú sekciu Magické Podbanské?\n\nTáto akcia je nevratná!";
+    if (!confirm(confirmText)) return;
+    
+    showLoading();
+    try {
       const data = await fetchRemoteDataJson();
       delete data.magic;
-      await window.githubSync.updateFile('data.json', JSON.stringify(data, null, 2), 'Delete magic section');
+      await window.githubSync.updateFile(
+        'data.json', 
+        JSON.stringify(data, null, 2), 
+        'Delete magic section'
+      );
+      
+      document.getElementById("magicEyebrow").value = "";
       document.getElementById("magicTitle").value = "";
+      document.getElementById("magicDescription").value = "";
       document.getElementById("magicContent").value = "";
       magicImages = [];
       magicSubsections = [];
       renderMagicImages();
       renderMagicSubsections();
-      notify("Sekcia Magické Podbanské bola vymazaná");
+      
+      notify("✅ Sekcia Magické Podbanské bola vymazaná", 'success');
+    } catch (err) {
+      console.error('Delete magic failed:', err);
+      notify('❌ Chyba pri mazaní: ' + err.message, 'error');
+    } finally {
+      hideLoading();
     }
   });
 
@@ -1366,8 +1590,10 @@ label {
     updateAboutPreview();
   }
 
-  function loadAllDataToForms() {
-    fetchRemoteDataJson().then(remote => {
+  async function loadAllDataToForms() {
+    showLoading();
+    try {
+      const remote = await fetchRemoteDataJson();
       const heroData = remote.hero || {};
       const aboutData = remote.about || {};
       const contactData = remote.contact || {};
@@ -1443,10 +1669,14 @@ label {
       // Render lists
       activities = remote.activities || [];
       renderActivities();
-    }).catch(err => {
+      
+      notify('✅ Dáta úspešne načítané', 'success');
+    } catch (err) {
       console.error('Failed to load data from GitHub:', err);
-      notify('⚠️ Dáta sa nepodarilo načítať - najskôr sa prihláste');
-    });
+      notify('⚠️ Dáta sa nepodarilo načítať - skontrolujte GitHub Sync nastavenie', 'warning');
+    } finally {
+      hideLoading();
+    }
   }
 
   // Clear all forms
@@ -1465,9 +1695,16 @@ label {
   // ========== GITHUB SYNC FUNCTIONALITY ==========
   
   // Reload data from GitHub button
-  document.getElementById("forceRefreshBtn")?.addEventListener("click", () => {
-    notify("🔄 Načítavam zmeny z GitHub...");
-    window.location.reload();
+  document.getElementById("forceRefreshBtn")?.addEventListener("click", async () => {
+    if (confirm('Načítať najnovšie dáta z GitHub?\n\nNeuložené zmeny budú stratené!')) {
+      notify("🔄 Načítavam zmeny z GitHub...", 'info');
+      try {
+        await loadAllDataToForms();
+        notify('✅ Dáta aktualizované', 'success');
+      } catch (err) {
+        notify('❌ Nepodarilo sa načítať zmeny', 'error');
+      }
+    }
   });
   
   // Setup GitHub button
@@ -1483,23 +1720,37 @@ label {
   });
 
   // Save GitHub config
-  window.saveGitHubConfig = function() {
+  window.saveGitHubConfig = async function() {
     const token = document.getElementById("githubToken").value.trim();
     const repo = document.getElementById("githubRepo").value.trim();
     
     if (!token || !repo) {
-      alert("Vyplňte všetky polia!");
+      notify("⚠️ Vyplňte všetky polia!", 'warning');
       return;
     }
     
     if (!repo.includes('/')) {
-      alert("Repository musí byť vo formáte: username/repo-name");
+      notify("⚠️ Repository musí byť vo formáte: username/repo-name", 'warning');
       return;
     }
     
-    window.githubSync.setup(token, repo);
-    document.getElementById("githubSetupModal").classList.add("hidden");
-    notify("✅ GitHub nastavenie uložené!");
+    showLoading();
+    try {
+      window.githubSync.setup(token, repo);
+      
+      // Test connection by fetching data.json
+      await fetchRemoteDataJson();
+      
+      document.getElementById("githubSetupModal").classList.add("hidden");
+      notify("✅ GitHub nastavenie uložené a overené!", 'success');
+      
+      // Reload data with new credentials
+      await loadAllDataToForms();
+    } catch (err) {
+      notify('❌ Neplatné GitHub nastavenie: ' + err.message, 'error');
+    } finally {
+      hideLoading();
+    }
   };
 
 
