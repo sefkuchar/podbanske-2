@@ -277,6 +277,63 @@ label {
     padding: 1rem;
   }
 }
+.section-header {
+  cursor: pointer;
+  user-select: none;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem;
+  background: linear-gradient(135deg, var(--primary-brown), #4a3f3a);
+  color: white;
+  border-radius: var(--radius-lg);
+  margin-bottom: 0.5rem;
+  transition: all 0.3s;
+}
+.section-header:hover {
+  transform: translateX(5px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+.section-header h2 {
+  color: white;
+  margin: 0;
+  font-size: 1.3rem;
+}
+.section-toggle {
+  font-size: 1.5rem;
+  transition: transform 0.3s;
+}
+.section-content {
+  max-height: 10000px;
+  overflow: hidden;
+  transition: max-height 0.5s ease-out, opacity 0.3s;
+  opacity: 1;
+}
+.section-content.collapsed {
+  max-height: 0;
+  opacity: 0;
+}
+.info-banner {
+  background: linear-gradient(135deg, #dbeafe, #bfdbfe);
+  border: 2px solid #3b82f6;
+  padding: 1.5rem;
+  border-radius: var(--radius-lg);
+  margin-bottom: 2rem;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.1);
+}
+.info-banner strong {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+  color: #1e40af;
+}
+.section-divider {
+  height: 3px;
+  background: linear-gradient(to right, transparent, var(--accent-gold), transparent);
+  margin: 2rem 0;
+  border-radius: 2px;
+}
 </style>
 </head>
 <body>
@@ -313,13 +370,14 @@ label {
     
 
     
-    <div style="display: flex; gap: 1rem; margin-bottom: 15px; flex-wrap: wrap;">
+    <div class="button-group" style="margin-bottom: 1.5rem;">
       <button id="logoutBtn">Odhlásiť sa</button>
       <button id="setupGitHubBtn" style="background-color: #6b7280;">⚙️ Nastavenie GitHub</button>
       <button id="forceRefreshBtn" style="background-color: #10b981;" title="Obnoví stránku so zmenami z GitHub">🔄 Načítať zmeny</button>
     </div>
-    <div style="background: #dbeafe; border: 2px solid #3b82f6; padding: 1rem; border-radius: 8px; margin-bottom: 1rem;">
-      <strong>ℹ️ Automatická synchronizácia:</strong> Všetky zmeny sa automaticky ukladajú priamo na GitHub. Po uložení počkajte 1-2 minúty a kliknite "🔄 Načítať zmeny" pre zobrazenie aktualizácií.
+    <div class="info-banner">
+      <strong>ℹ️ Automatická synchronizácia</strong>
+      <p style="margin: 0; color: #1e3a8a;">Všetky zmeny sa automaticky ukladajú priamo na GitHub.<br>Po uložení počkajte 1-2 minúty a kliknite "🔄 Načítať zmeny" pre zobrazenie aktualizácií.</p>
     </div>
 
     <!-- GitHub Setup Modal (hidden by default) -->
@@ -345,7 +403,11 @@ label {
 
     <!-- Hero Section Management -->
     <div class="admin-section">
-      <h2>Správa úvodnej sekcie</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>🏔️ Správa úvodnej sekcie (Hero)</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       <div class="admin-section-layout">
         <div class="edit-panel">
           <form id="heroEditForm">
@@ -379,11 +441,18 @@ label {
           </div>
         </div>
       </div>
+      </div>
     </div>
+
+    <div class="section-divider"></div>
 
     <!-- O nás Management -->
     <div class="admin-section">
-      <h2>Správa sekcie O nás</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>ℹ️ Správa sekcie O nás + Kontakt</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       <div class="admin-section-layout">
         <div class="edit-panel">
           <form id="aboutEditForm">
@@ -445,13 +514,20 @@ label {
           </div>
         </div>
       </div>
+      </div>
     </div>
+
+    <div class="section-divider"></div>
 
     <!-- Activities Management -->
     <div class="admin-section">
-      <h2>Správa aktivít</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>🎯 Správa aktivít</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       
-      <h3 style="margin-bottom: 0.5em;">Nadpisy sekcie</h3>
+      <h3 style="margin-bottom: 0.5em; margin-top: 1rem;">Nadpisy sekcie</h3>
       <div style="background: #f0f8ff; padding: 1em; border-radius: 8px; margin-bottom: 1.5em;">
         <label for="activitiesEyebrow">Malý nadpis (eyebrow)</label>
         <input type="text" id="activitiesEyebrow" placeholder="napr. NAŠE AKTIVITY">
@@ -485,11 +561,18 @@ label {
       <div id="activityList" class="item-list"></div>
       <!-- Debug: show raw activities JSON for troubleshooting -->
       <pre id="activityDebug" style="display:none; background:#fff; padding:0.5em; margin-top:0.75rem; border-radius:6px; overflow:auto; max-height:160px; border:1px dashed #ddd;"></pre>
+      </div>
     </div>
+
+    <div class="section-divider"></div>
 
     <!-- História Management -->
     <div class="admin-section">
-      <h2>Správa histórie</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>📜 Správa histórie</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       <form id="historyEditForm">
         <label for="historyEyebrow">Malý nadpis (eyebrow)</label>
         <input type="text" id="historyEyebrow" placeholder="napr. HISTÓRIA">
@@ -516,11 +599,18 @@ label {
         <button type="submit">Uložiť zmeny</button>
         <button type="button" id="deleteHistoryBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu História</button>
       </form>
+      </div>
     </div>
+
+    <div class="section-divider"></div>
 
     <!-- Príroda Management -->
     <div class="admin-section">
-      <h2>Správa sekcie Príroda</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>🌲 Správa sekcie Príroda</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       <form id="natureEditForm">
         <label for="natureEyebrow">Malý nadpis (eyebrow)</label>
         <input type="text" id="natureEyebrow" placeholder="napr. PRÍRODA">
@@ -547,11 +637,18 @@ label {
         <button type="submit">Uložiť zmeny</button>
         <button type="button" id="deleteNatureBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Príroda</button>
       </form>
+      </div>
     </div>
+
+    <div class="section-divider"></div>
 
     <!-- Pravidlá Management -->
     <div class="admin-section">
-      <h2>Správa pravidiel</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>📋 Správa pravidiel</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       <form id="rulesEditForm">
         <label for="rulesEyebrow">Malý nadpis (eyebrow)</label>
         <input type="text" id="rulesEyebrow" placeholder="napr. PRAVIDLÁ">
@@ -574,11 +671,18 @@ label {
         <button type="submit" style="margin-top: 1em;">Uložiť zmeny</button>
         <button type="button" id="deleteRulesBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Pravidlá</button>
       </form>
+      </div>
     </div>
+
+    <div class="section-divider"></div>
 
     <!-- Magické Podbanské Management -->
     <div class="admin-section">
-      <h2>Správa sekcie Magické Podbanské</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>✨ Správa sekcie Magické Podbanské</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       <form id="magicEditForm">
         <label for="magicEyebrow">Malý nadpis (eyebrow)</label>
         <input type="text" id="magicEyebrow" placeholder="napr. MAGICKÉ PODBANSKÉ">
@@ -607,16 +711,24 @@ label {
         <button type="submit" style="margin-top: 1em;">Uložiť zmeny</button>
         <button type="button" id="deleteMagicBtn" style="background: #dc3545; margin-top: 0.5em;">🗑️ Vymazať celú sekciu Magické Podbanské</button>
       </form>
+      </div>
     </div>
+
+    <div class="section-divider"></div>
 
     <!-- Footer Text Management -->
     <div class="admin-section">
-      <h2>Správa pätičky</h2>
+      <div class="section-header" onclick="toggleSection(this)">
+        <h2>📄 Správa pätičky</h2>
+        <span class="section-toggle">▼</span>
+      </div>
+      <div class="section-content">
       <form id="footerEditForm">
         <label for="footerText">Text v pätičke</label>
         <input type="text" id="footerText">
         <button type="submit">Uložiť text</button>
       </form>
+      </div>
     </div>
   </section>
 </div>
@@ -1692,6 +1804,22 @@ label {
     initializePreviews();
   }
 
+  // ========== UI UTILITIES ==========
+  
+  // Toggle collapsible sections
+  window.toggleSection = function(header) {
+    const content = header.nextElementSibling;
+    const toggle = header.querySelector('.section-toggle');
+    
+    if (content.classList.contains('collapsed')) {
+      content.classList.remove('collapsed');
+      toggle.style.transform = 'rotate(0deg)';
+    } else {
+      content.classList.add('collapsed');
+      toggle.style.transform = 'rotate(-90deg)';
+    }
+  };
+  
   // ========== GITHUB SYNC FUNCTIONALITY ==========
   
   // Reload data from GitHub button
