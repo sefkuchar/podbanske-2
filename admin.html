@@ -652,13 +652,16 @@ label {
     try {
       const file = await window.githubSync.getFile('data.json');
       if (!file || !file.content) {
-        return { hero:{}, about:{}, activities:[], activitiesHeader:{}, history:{}, nature:{}, rules:{}, magic:{}, contact:{}, footer:'' };
+        console.warn('data.json not found or empty');
+        notify('⚠️ data.json nenájdený - prihláste sa');
+        throw new Error('data.json not found');
       }
       const decoded = decodeURIComponent(escape(atob(file.content)));
       return JSON.parse(decoded);
     } catch (e) {
-      console.warn('Fetch remote data.json failed', e);
-      return { hero:{}, about:{}, activities:[], activitiesHeader:{}, history:{}, nature:{}, rules:{}, magic:{}, contact:{}, footer:'' };
+      console.error('Fetch remote data.json failed', e);
+      notify('❌ Nepodarilo sa načítať data.json - skontrolujte prístup');
+      throw e;
     }
   }
 
@@ -1440,6 +1443,9 @@ label {
       // Render lists
       activities = remote.activities || [];
       renderActivities();
+    }).catch(err => {
+      console.error('Failed to load data from GitHub:', err);
+      notify('⚠️ Dáta sa nepodarilo načítať - najskôr sa prihláste');
     });
   }
 
